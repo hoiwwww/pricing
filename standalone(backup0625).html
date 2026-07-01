@@ -1,0 +1,922 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>사장님신용대출 금리전략 대시보드</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.3.1",
+      "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+      "recharts": "https://esm.sh/recharts@2.12.7",
+      "lucide-react": "https://esm.sh/lucide-react@0.383.0"
+    }
+  }
+  </script>
+
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", "Segoe UI", sans-serif; background: #edf1f7; -webkit-font-smoothing: antialiased; }
+    #root { width: 100%; }
+    .reveal { opacity: 0; transform: translateY(8px); animation: rise 0.5s ease forwards; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react" data-type="module">
+    import React, { useState, useMemo } from "react";
+    import { createRoot } from "react-dom/client";
+    import {
+      Upload, Sliders, BarChart3, TrendingUp, TrendingDown,
+      Gauge, Wand2, Users, PiggyBank, Activity, Info,
+    } from "lucide-react";
+    import {
+      BarChart, Bar, XAxis, YAxis, CartesianGrid,
+      Tooltip, ResponsiveContainer, Legend, ReferenceLine, LabelList,
+    } from "recharts";
+
+    // ── 브랜드 로고 (Light Mode_Kbank_Icon_Rounded Square.png, base64 인라인) ──
+    const LOGO_SRC = "data:image/png;base64,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";
+
+    // ── theme ──
+    const C = {
+      primary: "#0114A7", secondary: "#4262FF", gray: "#EDF1F7", border: "#DCE3EF",
+      text: "#1A2138", sub: "#6B7488", faint: "#9AA3B5", cardBg: "#FFFFFF",
+      up: "#16a34a", down: "#dc2626", barInactive: "#AEBBD4", gridLine: "#E3E9F2", negative: "#E25563",
+    };
+    const tooltipStyle = { background: "#ffffff", border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12, color: C.primary };
+    const S = {
+      page: { minHeight: "100vh", background: C.gray, color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", "Segoe UI", sans-serif', padding: "32px 36px 60px" },
+      header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" },
+      headerLeft: { display: "flex", alignItems: "center", gap: 14 },
+      logo: { width: 58, height: 58, borderRadius: 13, flexShrink: 0 },
+      eyebrow: { fontSize: 11, letterSpacing: 2, color: C.secondary, fontWeight: 700, marginBottom: 8 },
+      title: { fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: -0.5, color: C.primary },
+      uploadBtn: { display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", background: C.primary, color: "#fff", padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "none" },
+      uploadBtnSm: { display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", background: C.cardBg, color: C.secondary, border: `1px solid ${C.secondary}`, borderRadius: 9, padding: "8px 12px", fontSize: 12, fontWeight: 600 },
+      tabs: { display: "flex", gap: 8, margin: "24px 0 28px" },
+      tab: { display: "inline-flex", alignItems: "center", gap: 7, background: C.cardBg, color: C.sub, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
+      tabActive: { background: C.primary, color: "#fff", borderColor: C.primary },
+      eventTabs: { display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" },
+      eventTab: { padding: "8px 16px", fontSize: 12.5, fontWeight: 600, borderRadius: 9, cursor: "pointer", border: `1px solid ${C.border}`, background: C.cardBg, color: C.sub, fontFamily: "inherit" },
+      eventTabActive: { background: C.secondary, color: "#fff", borderColor: C.secondary },
+      fileTag: { fontSize: 11, color: C.faint, marginLeft: 12 },
+      resultIntro: { fontSize: 13, color: C.text, background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 18px", marginBottom: 24, lineHeight: 1.6 },
+      cardGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 24 },
+      card: { background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 16, padding: "18px 20px", boxShadow: "0 1px 3px rgba(1,20,167,.04)" },
+      cardLabel: { fontSize: 12, color: C.sub, marginBottom: 10 },
+      cardValue: { fontSize: 26, fontWeight: 700, letterSpacing: -0.5, color: C.primary },
+      cardUnit: { fontSize: 13, color: C.faint, marginLeft: 4, fontWeight: 500 },
+      delta: { display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 600, marginTop: 10 },
+      deltaNote: { color: C.faint, fontWeight: 400, fontSize: 11, marginLeft: 4 },
+      chartCard: { background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 16, padding: "22px 24px", marginBottom: 20, boxShadow: "0 1px 3px rgba(1,20,167,.04)" },
+      chartTitle: { fontSize: 15, fontWeight: 600, marginBottom: 18, color: C.primary },
+      miniNote: { fontSize: 11, color: C.faint, marginTop: 14 },
+      arrowSm: { color: C.faint, fontSize: 12 },
+      sectionLabel: { fontSize: 14, fontWeight: 700, color: C.primary, margin: "28px 0 16px", paddingLeft: 14, borderLeft: `3px solid ${C.primary}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" },
+      subSectionLabel: { fontSize: 13, fontWeight: 700, color: C.text, margin: "20px 0 12px", paddingLeft: 12, borderLeft: `2px solid ${C.secondary}`, display: "flex", alignItems: "center", gap: 8 },
+      sectionBadge: { fontSize: 11, fontWeight: 600, color: C.secondary, background: "rgba(66,98,255,.08)", border: "1px solid rgba(66,98,255,.25)", borderRadius: 6, padding: "2px 8px" },
+      adwNotice: { display: "flex", alignItems: "center", gap: 8, background: "rgba(234,179,8,.08)", border: "1px solid rgba(234,179,8,.35)", borderRadius: 9, padding: "9px 14px", fontSize: 12, color: "#92400e", marginBottom: 22 },
+      funnelGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 },
+      funnelTitle: { fontSize: 14, fontWeight: 600, marginBottom: 3, color: C.text },
+      funnelDesc: { fontSize: 11.5, color: C.sub, marginBottom: 14 },
+      simCard: { background: C.cardBg, border: `2px solid ${C.primary}`, borderRadius: 16, padding: "22px 24px", marginBottom: 20, boxShadow: "0 4px 16px rgba(1,20,167,.08)" },
+      simHeadRow: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 },
+      simHead: { display: "flex", alignItems: "center", gap: 9 },
+      simActions: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" },
+      optBtn: { display: "inline-flex", alignItems: "center", gap: 6, background: C.primary, color: "#fff", border: "none", borderRadius: 9, padding: "8px 14px", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
+      resetBtn: { background: C.cardBg, color: C.sub, border: `1px solid ${C.border}`, borderRadius: 9, padding: "8px 12px", fontSize: 12.5, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" },
+      baseUploadBtn: { display: "inline-flex", alignItems: "center", gap: 6, background: C.cardBg, color: C.secondary, border: `1px solid ${C.secondary}`, borderRadius: 9, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, cursor: "pointer" },
+      cofInline: { float: "right", color: C.secondary, fontWeight: 600 },
+      cofInput: { width: 52, background: C.gray, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, padding: "3px 6px", fontSize: 12, margin: "0 4px", fontFamily: "inherit" },
+      elasTag: { fontSize: 10.5, color: C.faint, width: 44, textAlign: "right" },
+      assumptionBox: { background: "rgba(66,98,255,.07)", border: "1px solid rgba(66,98,255,.22)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: C.primary, lineHeight: 1.6, marginBottom: 22 },
+      sliderWrap: { display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 },
+      sliderRow: { display: "flex", alignItems: "center", gap: 14 },
+      sliderGrade: { width: 52, fontSize: 13, fontWeight: 600, color: C.text },
+      slider: { flex: 1, accentColor: C.primary, cursor: "pointer" },
+      sliderVal: { width: 56, textAlign: "right", fontSize: 13, fontWeight: 600 },
+      simTotals: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px,1fr))", gap: 14, marginBottom: 16 },
+      simTotalCard: { background: C.gray, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" },
+      simTable: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
+      th: { padding: "10px 12px", color: C.sub, fontWeight: 600, borderBottom: `2px solid ${C.border}`, fontSize: 12 },
+      td: { textAlign: "right", padding: "11px 12px", color: C.text, borderBottom: `1px solid ${C.gray}` },
+      tdGrade: { textAlign: "left", padding: "11px 12px", color: C.primary, fontWeight: 700, borderBottom: `1px solid ${C.gray}` },
+      indirectGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 14 },
+      indirectCard: { background: C.gray, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" },
+      indirectHead: { display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.text, marginBottom: 12, fontWeight: 600 },
+      gainBanner: { fontSize: 13, color: C.text, background: "rgba(66,98,255,.08)", border: "1px solid rgba(66,98,255,.25)", borderRadius: 10, padding: "10px 14px", marginBottom: 18 },
+      nCtrl: { display: "flex", alignItems: "center", gap: 8 },
+      nLabel: { fontSize: 11, color: C.sub },
+      nInput: { width: 64, background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 7, color: C.text, padding: "5px 8px", fontSize: 13, fontFamily: "inherit" },
+      nSuffix: { fontSize: 11, color: C.sub },
+    };
+
+    // ── 이벤트 정의 ──
+    const EVENTS = [
+      { id: "ev331", label: "3/31 본부조정금리변경",       refWeek: "4월 1주", refMonth: "4월", beforeMonths: ["1월","2월","3월"], afterMonths: ["4월"] },
+      { id: "ev423", label: "4/23 본부조정금리변경",       refWeek: "5월 1주", refMonth: "5월", beforeMonths: ["3월","4월"],       afterMonths: ["5월"] },
+      { id: "ev529", label: "5/29 토스/현카 우대금리 도입", refWeek: "6월 1주", refMonth: "6월", beforeMonths: ["4월","5월"],       afterMonths: ["6월"] },
+    ];
+
+    // ── 주간 영업 지표 (이벤트별) ──
+    const DEMO_WEEKLY = {
+      ev331: [
+        { week: "3월 2주", newLoan: 62, netLoan: 28, balance: 1510, count: 95,  newCust: 78,  phase: "before" },
+        { week: "3월 3주", newLoan: 65, netLoan: 30, balance: 1540, count: 98,  newCust: 81,  phase: "before" },
+        { week: "3월 4주", newLoan: 58, netLoan: 24, balance: 1565, count: 91,  newCust: 75,  phase: "before" },
+        { week: "4월 1주", newLoan: 79, netLoan: 43, balance: 1608, count: 119, newCust: 97,  phase: "after"  },
+        { week: "4월 2주", newLoan: 83, netLoan: 46, balance: 1654, count: 124, newCust: 102, phase: "after"  },
+        { week: "4월 3주", newLoan: 86, netLoan: 49, balance: 1703, count: 129, newCust: 106, phase: "after"  },
+      ],
+      ev423: [
+        { week: "4월 1주", newLoan: 79, netLoan: 43, balance: 1608, count: 119, newCust: 97,  phase: "before" },
+        { week: "4월 2주", newLoan: 83, netLoan: 46, balance: 1654, count: 124, newCust: 102, phase: "before" },
+        { week: "4월 3주", newLoan: 86, netLoan: 49, balance: 1703, count: 129, newCust: 106, phase: "before" },
+        { week: "4월 4주", newLoan: 80, netLoan: 41, balance: 1744, count: 121, newCust: 100, phase: "before" },
+        { week: "5월 1주", newLoan: 97, netLoan: 56, balance: 1800, count: 143, newCust: 119, phase: "after"  },
+        { week: "5월 2주", newLoan: 102, netLoan: 59, balance: 1859, count: 150, newCust: 125, phase: "after" },
+        { week: "5월 3주", newLoan: 99, netLoan: 53, balance: 1912, count: 147, newCust: 122, phase: "after"  },
+      ],
+      ev529: [
+        { week: "5월 1주", newLoan: 97,  netLoan: 56, balance: 1800, count: 143, newCust: 119, phase: "before" },
+        { week: "5월 2주", newLoan: 102, netLoan: 59, balance: 1859, count: 150, newCust: 125, phase: "before" },
+        { week: "5월 3주", newLoan: 99,  netLoan: 53, balance: 1912, count: 147, newCust: 122, phase: "before" },
+        { week: "5월 4주", newLoan: 96,  netLoan: 49, balance: 1961, count: 142, newCust: 118, phase: "before" },
+        { week: "6월 1주", newLoan: 131, netLoan: 77, balance: 2038, count: 191, newCust: 158, phase: "after"  },
+        { week: "6월 2주", newLoan: 138, netLoan: 82, balance: 2120, count: 201, newCust: 167, phase: "after"  },
+        { week: "6월 3주", newLoan: 145, netLoan: 87, balance: 2207, count: 211, newCust: 175, phase: "after"  },
+      ],
+    };
+
+    // ── 월간 수익성 지표 (고신용 / 중저신용 분리) ──
+    const DEMO_MONTHLY_HIGH = [
+      { month: "1월", interest: 88.4, contribution: 48.3, operatingProfit: 31.2, roa: 1.71 },
+      { month: "2월", interest: 89.1, contribution: 48.8, operatingProfit: 31.6, roa: 1.72 },
+      { month: "3월", interest: 90.5, contribution: 49.7, operatingProfit: 32.3, roa: 1.73 },
+      { month: "4월", interest: 96.2, contribution: 53.1, operatingProfit: 34.8, roa: 1.79 },
+      { month: "5월", interest: 101.4, contribution: 56.2, operatingProfit: 36.9, roa: 1.85 },
+      { month: "6월", interest: 108.3, contribution: 60.5, operatingProfit: 39.8, roa: 1.92 },
+    ];
+    const DEMO_MONTHLY_LOW = [
+      { month: "1월", interest: 42.1, contribution: 20.3, operatingProfit: 10.8, roa: 1.84 },
+      { month: "2월", interest: 42.8, contribution: 20.7, operatingProfit: 11.0, roa: 1.85 },
+      { month: "3월", interest: 43.5, contribution: 21.1, operatingProfit: 11.2, roa: 1.86 },
+      { month: "4월", interest: 46.2, contribution: 22.8, operatingProfit: 12.1, roa: 1.92 },
+      { month: "5월", interest: 48.9, contribution: 24.3, operatingProfit: 13.0, roa: 1.98 },
+      { month: "6월", interest: 52.1, contribution: 26.2, operatingProfit: 14.1, roa: 2.06 },
+    ];
+
+    // ── 시뮬레이터 기준값 (사장님신용대출) ──
+    const COF_DEFAULT = 2.8;
+    // 8~10등급 레거시 잔액 — 현 전략 조정 범위 밖(신규 승인 없음), 잔액 카드 합산 표시 전용
+    const LEGACY_BALANCE = 165.2;
+    const DEMO_SIM_BASE = [
+      { grade: "1등급", balance: 620, count: 45, newWk: 48, netWk: 28, churn: 11.2, margin: 2.8, legalCostRate: -0.02, contractCreditRate: -0.10, contractOpRate: -0.18, creditGapRate: -0.01, opGapRate: -0.01, nonIntRate: 0.10, elasticity: 1.6, newCustRatio: 62 },
+      { grade: "2등급", balance: 480, count: 38, newWk: 39, netWk: 22, churn: 13.5, margin: 3.4, legalCostRate: -0.02, contractCreditRate: -0.18, contractOpRate: -0.22, creditGapRate: -0.02, opGapRate: -0.01, nonIntRate: 0.09, elasticity: 2.1, newCustRatio: 65 },
+      { grade: "3등급", balance: 390, count: 30, newWk: 31, netWk: 16, churn: 17.1, margin: 4.2, legalCostRate: -0.02, contractCreditRate: -0.30, contractOpRate: -0.28, creditGapRate: -0.04, opGapRate: -0.02, nonIntRate: 0.07, elasticity: 2.8, newCustRatio: 68 },
+      { grade: "4등급", balance: 280, count: 22, newWk: 22, netWk: 10, churn: 22.4, margin: 5.1, legalCostRate: -0.02, contractCreditRate: -0.50, contractOpRate: -0.35, creditGapRate: -0.07, opGapRate: -0.02, nonIntRate: 0.06, elasticity: 3.4, newCustRatio: 70 },
+      { grade: "5등급", balance: 180, count: 14, newWk: 14, netWk: 5,  churn: 29.3, margin: 6.3, legalCostRate: -0.02, contractCreditRate: -0.75, contractOpRate: -0.45, creditGapRate: -0.12, opGapRate: -0.03, nonIntRate: 0.05, elasticity: 2.5, newCustRatio: 72 },
+      { grade: "6등급", balance: 95,  count: 8,  newWk: 7,  netWk: 2,  churn: 35.8, margin: 7.5, legalCostRate: -0.02, contractCreditRate: -1.10, contractOpRate: -0.55, creditGapRate: -0.18, opGapRate: -0.04, nonIntRate: 0.04, elasticity: 1.8, newCustRatio: 74 },
+      { grade: "7등급", balance: 45,  count: 4,  newWk: 3,  netWk: 1,  churn: 42.1, margin: 9.2, legalCostRate: -0.02, contractCreditRate: -1.60, contractOpRate: -0.70, creditGapRate: -0.25, opGapRate: -0.06, nonIntRate: 0.03, elasticity: 1.3, newCustRatio: 76 },
+    ];
+
+    // ── 퍼널 데이터 (이벤트별, 2지표) ──
+    const DEMO_FUNNEL = {
+      ev331: [
+        { grade: "1등급", platformInflow: [44.2, 49.8], preApprovalExec: [65.3, 69.1] },
+        { grade: "2등급", platformInflow: [40.5, 45.7], preApprovalExec: [61.8, 65.9] },
+        { grade: "3등급", platformInflow: [36.1, 40.6], preApprovalExec: [57.4, 61.3] },
+        { grade: "4등급", platformInflow: [30.7, 34.2], preApprovalExec: [51.5, 54.9] },
+        { grade: "5등급", platformInflow: [25.3, 27.1], preApprovalExec: [44.1, 45.6] },
+        { grade: "6등급", platformInflow: [20.8, 21.8], preApprovalExec: [37.4, 38.2] },
+        { grade: "7등급", platformInflow: [16.2, 16.9], preApprovalExec: [30.1, 30.6] },
+      ],
+      ev423: [
+        { grade: "1등급", platformInflow: [49.8, 55.1], preApprovalExec: [69.1, 72.8] },
+        { grade: "2등급", platformInflow: [45.7, 50.9], preApprovalExec: [65.9, 69.4] },
+        { grade: "3등급", platformInflow: [40.6, 45.2], preApprovalExec: [61.3, 65.1] },
+        { grade: "4등급", platformInflow: [34.2, 37.8], preApprovalExec: [54.9, 57.8] },
+        { grade: "5등급", platformInflow: [27.1, 29.5], preApprovalExec: [45.6, 47.1] },
+        { grade: "6등급", platformInflow: [21.8, 23.2], preApprovalExec: [38.2, 39.4] },
+        { grade: "7등급", platformInflow: [16.9, 17.8], preApprovalExec: [30.6, 31.4] },
+      ],
+      ev529: [
+        { grade: "1등급", platformInflow: [55.1, 62.3], preApprovalExec: [72.8, 77.5] },
+        { grade: "2등급", platformInflow: [50.9, 57.8], preApprovalExec: [69.4, 74.2] },
+        { grade: "3등급", platformInflow: [45.2, 51.6], preApprovalExec: [65.1, 70.0] },
+        { grade: "4등급", platformInflow: [37.8, 43.2], preApprovalExec: [57.8, 62.5] },
+        { grade: "5등급", platformInflow: [29.5, 32.1], preApprovalExec: [47.1, 49.8] },
+        { grade: "6등급", platformInflow: [23.2, 25.4], preApprovalExec: [39.4, 41.1] },
+        { grade: "7등급", platformInflow: [17.8, 19.2], preApprovalExec: [31.4, 33.0] },
+      ],
+    };
+
+    // ── KPI 정의 ──
+    const WEEKLY_KPI_DEFS = [
+      { key: "newLoan",  label: "신규대출 실행액 (주간)", unit: "억", fmt: (v) => v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) },
+      { key: "netLoan",  label: "대출 순증액 (주간)",     unit: "억", fmt: (v) => v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) },
+      { key: "balance",  label: "대출 잔액",              unit: "억", fmt: (v) => v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) },
+      { key: "count",    label: "대출 건수 (주간)",       unit: "건", fmt: (v) => v.toLocaleString() },
+      { key: "newCust",  label: "주간 신규고객 유입",     unit: "명", fmt: (v) => v.toLocaleString() },
+    ];
+    const PROFIT_KPI_DEFS = [
+      { key: "interest",        label: "이자수익 (월)",       unit: "백만원", fmt: (v) => Math.round(v * 100).toLocaleString() },
+      { key: "contribution",    label: "공헌이익 (월)",       unit: "백만원", fmt: (v) => Math.round(v * 100).toLocaleString() },
+      { key: "operatingProfit", label: "영업이익 (월)",       unit: "백만원", fmt: (v) => Math.round(v * 100).toLocaleString() },
+    ];
+
+    // ── 계산 ──
+    const avg  = (rows, key) => rows.length ? rows.reduce((s, r) => s + (r[key] ?? 0), 0) / rows.length : 0;
+    const sumBy = (rows, k) => rows.reduce((a, r) => a + (r[k] ?? 0), 0);
+    const toMonthlyMM = (v) => v * 100 / 12; // 연간(억) → 월(백만원)
+
+    function computeRows(adjMap, base, cofVal) {
+      return base.map((s) => {
+        const bp = adjMap[s.grade] ?? 0;
+        const churnNew = Math.max(0, s.churn + (bp / 10) * s.elasticity);
+        const retainRatio = (100 - churnNew) / (100 - s.churn);
+        const balNew = s.balance * retainRatio;
+        const marginNew = s.margin + bp / 100;
+        const intOld = (s.balance * s.margin) / 100;
+        const intNew = (balNew * marginNew) / 100;
+        const cmRateOld = s.margin - cofVal + s.legalCostRate + s.contractCreditRate;
+        const cmRateNew = marginNew - cofVal + s.legalCostRate + s.contractCreditRate;
+        const cmOld = (s.balance * cmRateOld) / 100;
+        const cmNew = (balNew * cmRateNew) / 100;
+        const opAdjRate = -s.contractOpRate - s.creditGapRate - s.opGapRate - s.nonIntRate;
+        const opOld = cmOld - (s.balance * opAdjRate) / 100;
+        const opNew = cmNew - (balNew * opAdjRate) / 100;
+        return {
+          grade: s.grade, bp,
+          balOld: s.balance, balNew,
+          cntOld: s.count, cntNew: s.count * retainRatio,
+          newWkOld: s.newWk, newWkNew: s.newWk * retainRatio,
+          netWkOld: s.netWk, netWkNew: s.netWk * retainRatio,
+          churnOld: s.churn, churnNew,
+          intOld, intNew, cmOld, cmNew, opOld, opNew,
+          newCustRatio: s.newCustRatio ?? 100,
+        };
+      });
+    }
+
+    function runSimulation(adjMap, base, cofVal, indirectParams) {
+      const rows = computeRows(adjMap, base, cofVal);
+      const tot = {
+        balOld: sumBy(rows,"balOld"), balNew: sumBy(rows,"balNew"),
+        cntOld: sumBy(rows,"cntOld"), cntNew: sumBy(rows,"cntNew"),
+        newWkOld: sumBy(rows,"newWkOld"), newWkNew: sumBy(rows,"newWkNew"),
+        netWkOld: sumBy(rows,"netWkOld"), netWkNew: sumBy(rows,"netWkNew"),
+        intOld: sumBy(rows,"intOld"), intNew: sumBy(rows,"intNew"),
+        cmOld: sumBy(rows,"cmOld"), cmNew: sumBy(rows,"cmNew"),
+        opOld: sumBy(rows,"opOld"), opNew: sumBy(rows,"opNew"),
+      };
+      tot.roaOld = tot.balOld ? (tot.opOld / tot.balOld) * 100 : 0;
+      tot.roaNew = tot.balNew ? (tot.opNew / tot.balNew) * 100 : 0;
+      const custGainOld = rows.reduce((sum, r) => sum + r.cntOld * (r.newCustRatio / 100), 0);
+      const custGain    = rows.reduce((sum, r) => sum + r.cntNew * (r.newCustRatio / 100), 0);
+      const { cardRate, depositRate, mauRate } = indirectParams;
+      return { rows, tot, indirect: { custGainOld, custGain, cardEffect: custGain * (cardRate / 100), depositEffect: (custGain * depositRate) / 10000, mauEffect: custGain * (mauRate / 100) } };
+    }
+
+    function findOptimalAdj(base, cofVal, { churnCap = 15, range = 50, step = 5 } = {}) {
+      const steps = [];
+      for (let b = -range; b <= range; b += step) steps.push(b);
+      const bestAdj = {};
+      base.forEach((s) => {
+        let bestBp = 0, bestCm = -Infinity;
+        steps.forEach((bp) => {
+          const churnNew = Math.max(0, s.churn + (bp / 10) * s.elasticity);
+          if (churnNew - s.churn > churnCap) return;
+          const balNew = s.balance * (100 - churnNew) / (100 - s.churn);
+          const cm = (balNew * (s.margin + bp / 100 - cofVal + s.legalCostRate + s.contractCreditRate)) / 100;
+          if (cm > bestCm) { bestCm = cm; bestBp = bp; }
+        });
+        bestAdj[s.grade] = bestBp;
+      });
+      return bestAdj;
+    }
+
+    // ── CSV 파서 (UTF-8 BOM / UTF-16 LE BOM / EUC-KR 자동 감지) ──
+    function parseCsvText(csv) {
+      const lines = csv.trim().split(/\r?\n/).filter(l => l.trim());
+      if (!lines.length) return [];
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      return lines.slice(1).map(line => {
+        const vals = []; let cur = '', inQ = false;
+        for (const ch of line) {
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === ',' && !inQ) { vals.push(cur); cur = ''; }
+          else { cur += ch; }
+        }
+        vals.push(cur);
+        return Object.fromEntries(headers.map((h, i) => {
+          const v = (vals[i] || '').trim();
+          return [h, v === '' ? '' : isNaN(v) ? v : +v];
+        }));
+      });
+    }
+    const parseWeekly  = (rows) => rows;
+    const parseMonthly = (rows) => rows;
+    const parseSimBase = (rows) => rows;
+    function parseFunnelWide(rows) {
+      return rows.map((r) => ({
+        grade: r.grade,
+        platformInflow:  [+(r.platformInflow_before  ?? 0), +(r.platformInflow_after  ?? 0)],
+        preApprovalExec: [+(r.preApprovalExec_before ?? 0), +(r.preApprovalExec_after ?? 0)],
+      }));
+    }
+    function readCsvFile(file, parser, onParsed, errMsg) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const bytes = new Uint8Array(ev.target.result);
+          let text;
+          if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+            text = new TextDecoder('utf-8').decode(bytes.slice(3));
+          } else if (bytes[0] === 0xFF && bytes[1] === 0xFE) {
+            text = new TextDecoder('utf-16le').decode(bytes.slice(2));
+          } else {
+            try { text = new TextDecoder('euc-kr', { fatal: true }).decode(bytes); }
+            catch { text = new TextDecoder('utf-8').decode(bytes); }
+          }
+          onParsed(parser(parseCsvText(text)));
+        } catch(e) { alert(errMsg + '\n\n[디버그] ' + e.message); }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // ── KpiCard ──
+    function KpiCard({ label, value, unit, delta, note, animDelay }) {
+      const up = (delta ?? 0) >= 0;
+      return (
+        <div style={{ ...S.card, animationDelay: animDelay != null ? `${animDelay}ms` : undefined }} className={animDelay != null ? "reveal" : undefined}>
+          <div style={S.cardLabel}>{label}</div>
+          <div style={S.cardValue}>{value}<span style={S.cardUnit}>{unit}</span></div>
+          {note
+            ? <div style={{ ...S.delta, color: C.faint, fontWeight: 400 }}>{note}</div>
+            : <div style={{ ...S.delta, color: up ? C.up : C.down }}>
+                {up ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                {up ? "+" : ""}{delta != null ? delta.toFixed(1) : "0.0"}%
+                <span style={S.deltaNote}>시행 전 평균 대비</span>
+              </div>
+          }
+        </div>
+      );
+    }
+
+    // ── IndirectCard ──
+    function IndirectCard({ icon: Icon, color, label, value, ctrlLabel, n, setN, suffix }) {
+      return (
+        <div style={S.indirectCard}>
+          <div style={S.indirectHead}><Icon size={16} color={color} /><span>{label}</span></div>
+          <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 14 }}>{value}</div>
+          <div style={S.nCtrl}>
+            <span style={S.nLabel}>{ctrlLabel}</span>
+            <input type="number" value={n} onChange={(e) => setN(Number(e.target.value))} style={S.nInput} />
+            <span style={S.nSuffix}>{suffix}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // ── WaveBar ──
+    function WaveBar({ x, y, width, height, fill }) {
+      if (x == null || width == null) return null;
+      const cut = 14, topH = Math.max(0, height - cut), q = width / 4, midY = y + topH + cut / 2;
+      return (
+        <g>
+          <rect x={x} y={y} width={width} height={topH} fill={fill} rx={4} />
+          <path d={`M ${x} ${midY} q ${q/2} -6 ${q} 0 t ${q} 0 t ${q} 0 t ${q} 0`} stroke={fill} strokeWidth={3} fill="none" opacity={0.9} />
+        </g>
+      );
+    }
+
+    // ── Simulator ──
+    function Simulator({ sim, adj, setAdj, simBase, cof, setCof, cardRate, setCardRate, depositRate, setDepositRate, mauRate, setMauRate, onFindOptimal, onResetAdj, onBaseUpload, baseFile }) {
+      const volTotals = [
+        { label: "신규취급액 (주)",    old: sim.tot.newWkOld, new: sim.tot.newWkNew, unit: "억", fmt: (v) => v.toFixed(1) },
+        { label: "순증액 (주)",        old: sim.tot.netWkOld, new: sim.tot.netWkNew, unit: "억", fmt: (v) => v.toFixed(1) },
+        { label: "대출 잔액 (총합)",    old: sim.tot.balOld,   new: sim.tot.balNew,   unit: "억", fmt: (v) => v.toFixed(1), legacy: true },
+        { label: "대출 건수 (주간)",   old: sim.tot.cntOld,   new: sim.tot.cntNew,   unit: "건", fmt: (v) => Math.round(v).toLocaleString() },
+        { label: "예상 신규고객 유입(주간)", old: sim.indirect.custGainOld, new: sim.indirect.custGain, unit: "명", fmt: (v) => Math.round(v).toLocaleString() },
+      ];
+      const profitTotals = [
+        { label: "이자수익 (월)",          old: toMonthlyMM(sim.tot.intOld), new: toMonthlyMM(sim.tot.intNew), unit: "백만원", fmt: (v) => Math.round(v).toLocaleString() },
+        { label: "공헌이익 (월)",          old: toMonthlyMM(sim.tot.cmOld),  new: toMonthlyMM(sim.tot.cmNew),  unit: "백만원", fmt: (v) => Math.round(v).toLocaleString() },
+        { label: "영업이익 (월)",          old: toMonthlyMM(sim.tot.opOld),  new: toMonthlyMM(sim.tot.opNew),  unit: "백만원", fmt: (v) => Math.round(v).toLocaleString() },
+      ];
+      const weeklySummaryData = [
+        { name: "신규실행액 (억/주간)", curr: sim.tot.newWkOld, adj: sim.tot.newWkNew },
+        { name: "대출건수 (건/주간)",   curr: sim.tot.cntOld,   adj: sim.tot.cntNew   },
+        { name: "순증액 (억/주간)",     curr: sim.tot.netWkOld, adj: sim.tot.netWkNew },
+      ];
+      const profitSummaryData = [
+        { name: "이자수익 (백만원/월)", curr: toMonthlyMM(sim.tot.intOld), adj: toMonthlyMM(sim.tot.intNew) },
+        { name: "공헌이익 (백만원/월)", curr: toMonthlyMM(sim.tot.cmOld),  adj: toMonthlyMM(sim.tot.cmNew)  },
+      ];
+      const fmtWeeklyLabel = (name, v) => name.includes("건수") ? Math.round(v).toLocaleString() : v.toFixed(1);
+      const fmtProfitLabel = (_name, v) => Math.round(v).toLocaleString();
+      const renderSummaryLabel = (data, fmtFn) => (color) => (props) => {
+        const { x, y, width, value, index } = props;
+        if (value == null) return null;
+        return (
+          <text x={x + width / 2} y={y - 6} textAnchor="middle" fontSize={10.5} fontWeight={700} fill={color}>
+            {fmtFn(data[index].name, value)}
+          </text>
+        );
+      };
+      const renderCard = (t, i) => {
+        const d = t.new - t.old; const up = d >= 0;
+        return (
+          <div key={t.label} style={S.simTotalCard}>
+            <div style={S.cardLabel}>{t.label}</div>
+            <div style={S.cardValue}>
+              {t.noBase && t.new >= 0 ? "+" : ""}
+              {t.legacy ? (t.new + LEGACY_BALANCE).toFixed(1) : t.fmt(t.new)}
+              <span style={S.cardUnit}>{t.unit}</span>
+            </div>
+            {t.noBase
+              ? <div style={{ ...S.delta, color: C.faint, fontWeight: 400 }}>3개월 평균 당행 최초 등록고객 비율 반영</div>
+              : t.legacy
+                ? <div style={{ marginTop: 4, lineHeight: 1.8 }}>
+                    <div style={{ fontSize: 11.5, display: "flex", alignItems: "center", gap: 3, color: up ? C.up : C.down }}>
+                      {up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                      <span style={{ color: C.sub }}>전략 1~7등급</span>
+                      <b style={{ color: C.text }}>{t.fmt(t.new)}억</b>
+                      <span>({up ? "+" : ""}{t.fmt(d)}억)</span>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: C.faint }}>
+                      레거시 8~10등급 <b>{LEGACY_BALANCE.toFixed(1)}억</b><span style={{ fontSize: 10, marginLeft: 4 }}>· 조정 외</span>
+                    </div>
+                  </div>
+                : <div style={{ ...S.delta, color: up ? C.up : C.down }}>
+                    {up ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                    {up ? "+" : ""}{t.fmt(d)}{t.unit}<span style={S.deltaNote}>현 상태 대비</span>
+                  </div>
+            }
+          </div>
+        );
+      };
+      return (
+        <>
+          <section style={S.simCard}>
+            <div style={S.simHeadRow}>
+              <div style={S.simHead}><Gauge size={17} color={C.primary} /><span style={{ fontSize: 15, fontWeight: 600 }}>전략등급 금리 조정 시뮬레이터</span></div>
+              <div style={S.simActions}>
+                <button onClick={onFindOptimal} style={S.optBtn}><Wand2 size={14} /> 최적금리 찾기(참고)</button>
+                <button onClick={onResetAdj} style={S.resetBtn}>초기화</button>
+                <label style={S.baseUploadBtn}><Upload size={13} /> 기준값 CSV<input type="file" accept=".csv" onChange={onBaseUpload} hidden /></label>
+              </div>
+            </div>
+            <div style={{ ...S.assumptionBox, marginTop: 18 }}>
+              <Info size={13} style={{ verticalAlign: -2, marginRight: 6 }} />
+              탄력성 계수: 등급별 <b>실측 다중회귀분석</b> 기반(2026-06)
+              <br />
+              <b>공헌이익</b> = 이자수익 − 자금원가율 + 법적비용 + 계약신용원가 &nbsp;|&nbsp;
+              <b>영업이익</b> = 공헌이익 − 계약업무원가 − 신용원가gap − 업무원가gap + 비이자이익 &nbsp;(비용율 CSV 음수(−) 입력)
+              <br />
+              CSV: grade,balance,count,newWk,netWk,churn,margin,<b>legalCostRate,contractCreditRate,contractOpRate,creditGapRate,opGapRate,nonIntRate</b>,elasticity,<b>newCustRatio</b> · 현재: {baseFile}
+              <span style={S.cofInline}>
+                <span style={{ fontSize: 10.5, fontWeight: 400, color: C.faint }}>(사장님 신용대출 3개월 평균)</span> 자금원가율 <input type="number" step={0.1} value={cof} onChange={(e) => setCof(Number(e.target.value))} style={S.cofInput} />%
+              </span>
+            </div>
+
+            <div style={S.sliderWrap}>
+              {simBase.map((s) => {
+                const v = adj[s.grade] ?? 0;
+                return (
+                  <div key={s.grade} style={S.sliderRow}>
+                    <span style={S.sliderGrade}>{s.grade}</span>
+                    <input type="range" min={-50} max={50} step={5} value={v}
+                      onChange={(e) => setAdj((p) => ({ ...p, [s.grade]: Number(e.target.value) }))}
+                      style={S.slider} />
+                    <span style={{ ...S.sliderVal, color: v < 0 ? C.secondary : v > 0 ? C.primary : C.faint }}>{v > 0 ? "+" : ""}{v}bp</span>
+                    <span style={S.elasTag}>ε {s.elasticity}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 볼륨 카드 */}
+            <div style={S.subSectionLabel}>
+              신규유입 변화
+              <span style={{ fontSize: 11, color: C.sub, fontWeight: 400 }}>(즉시효과 — 금리 조정 시 단기 반응)</span>
+            </div>
+            <div style={S.simTotals}>{volTotals.map(renderCard)}</div>
+            <div style={S.miniNote}>
+              * 측정된 금리 민감도와 여정이탈률 변화를 기반으로 신규 유입 변화를 추정합니다 (즉시효과)<br />
+              * 여정이탈률 = 대출 여정 중 한도·금리를 확인한 고객이 최종 실행에 도달하지 못한 비율
+            </div>
+
+            {/* 수익성 카드 */}
+            <div style={S.subSectionLabel}>
+              추정 손익
+              <span style={{ fontSize: 11, color: C.sub, fontWeight: 400 }}>(균형추정 — 월간 기준)</span>
+            </div>
+            <div style={S.simTotals}>{profitTotals.map(renderCard)}</div>
+            <div style={S.miniNote}>* 추정손익은 변경된 조정금리가 지속되어 포트폴리오 내 모든 고객이 새 조정금리를 적용받는 균형점에 도달했을 때의 추정치입니다</div>
+
+
+
+            <div style={{ overflowX: "auto" }}>
+              <table style={S.simTable}>
+                <thead>
+                  <tr>
+                    {["등급","조정","이탈율","건수(주)","취급액(주,억)","순증액(주,억)","잔액(억)","이자수익(억)","공헌이익(억)","영업이익(억)"].map((h, i) => (
+                      <th key={h} style={{ ...S.th, textAlign: i === 0 ? "left" : "right" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sim.rows.map((r) => (
+                    <tr key={r.grade}>
+                      <td style={S.tdGrade}>{r.grade}</td>
+                      <td style={S.td}>{r.bp > 0 ? "+" : ""}{r.bp}bp</td>
+                      <td style={S.td}>{r.churnOld.toFixed(1)} <span style={S.arrowSm}>→</span> <b style={{ color: r.churnNew <= r.churnOld ? C.up : C.down }}>{r.churnNew.toFixed(1)}%</b></td>
+                      <td style={S.td}>{Math.round(r.cntOld).toLocaleString()} <span style={S.arrowSm}>→</span> <b>{Math.round(r.cntNew).toLocaleString()}</b></td>
+                      <td style={S.td}>{r.newWkOld.toFixed(1)} <span style={S.arrowSm}>→</span> <b>{r.newWkNew.toFixed(1)}</b></td>
+                      <td style={S.td}>{r.netWkOld.toFixed(1)} <span style={S.arrowSm}>→</span> <b>{r.netWkNew.toFixed(1)}</b></td>
+                      <td style={S.td}>{r.balOld.toFixed(1)} <span style={S.arrowSm}>→</span> <b>{r.balNew.toFixed(1)}</b></td>
+                      <td style={S.td}>{r.intOld.toFixed(1)} <span style={S.arrowSm}>→</span> <b>{r.intNew.toFixed(1)}</b></td>
+                      <td style={S.td}>{r.cmOld.toFixed(1)} <span style={S.arrowSm}>→</span> <b>{r.cmNew.toFixed(1)}</b></td>
+                      <td style={S.td}>{r.opOld.toFixed(1)} <span style={S.arrowSm}>→</span> <b>{r.opNew.toFixed(1)}</b></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section style={S.chartCard}>
+            <div style={S.chartTitle}>사장님신용대출 요약 — 현 상태 vs 조정 후 (주간 물량)</div>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={weeklySummaryData} margin={{ top: 28, right: 16, left: 0, bottom: 0 }} barCategoryGap="20%" barSize={40}>
+                <CartesianGrid strokeDasharray="3 3" stroke={C.gridLine} />
+                <XAxis dataKey="name" tick={{ fill: C.sub, fontSize: 11.5 }} />
+                <YAxis tick={{ fill: C.sub, fontSize: 11 }} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(1,20,167,.04)" }} />
+                <Legend wrapperStyle={{ fontSize: 12, color: C.text }} />
+                <Bar dataKey="curr" name="현재" fill={C.barInactive} radius={[4,4,0,0]}>
+                  <LabelList dataKey="curr" content={renderSummaryLabel(weeklySummaryData, fmtWeeklyLabel)(C.sub)} />
+                </Bar>
+                <Bar dataKey="adj"  name="조정 후" fill={C.primary} radius={[4,4,0,0]}>
+                  <LabelList dataKey="adj" content={renderSummaryLabel(weeklySummaryData, fmtWeeklyLabel)(C.primary)} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </section>
+
+          <section style={S.chartCard}>
+            <div style={S.chartTitle}>사장님신용대출 요약 — 현 상태 vs 조정 후 (월간 수익성)</div>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={profitSummaryData} margin={{ top: 28, right: 16, left: 0, bottom: 0 }} barCategoryGap="20%" barSize={40}>
+                <CartesianGrid strokeDasharray="3 3" stroke={C.gridLine} />
+                <XAxis dataKey="name" tick={{ fill: C.sub, fontSize: 11.5 }} />
+                <YAxis tick={{ fill: C.sub, fontSize: 11 }} unit="백만원" />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(1,20,167,.04)" }} />
+                <Legend wrapperStyle={{ fontSize: 12, color: C.text }} />
+                <Bar dataKey="curr" name="현재" fill={C.barInactive} radius={[4,4,0,0]}>
+                  <LabelList dataKey="curr" content={renderSummaryLabel(profitSummaryData, fmtProfitLabel)(C.sub)} />
+                </Bar>
+                <Bar dataKey="adj"  name="조정 후" fill={C.primary} radius={[4,4,0,0]}>
+                  <LabelList dataKey="adj" content={renderSummaryLabel(profitSummaryData, fmtProfitLabel)(C.primary)} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </section>
+
+          <section style={S.chartCard}>
+            <div style={S.chartTitle}>간접효과 — 유입 고객 증가분 연동</div>
+            <div style={S.gainBanner}>
+              조정 후 주간 신규고객{" "}
+              <b style={{ color: C.primary }}>
+                {Math.round(sim.indirect.custGain).toLocaleString()}명
+              </b>{" "}기준
+            </div>
+            <div style={S.indirectGrid}>
+              <IndirectCard icon={Users}    color={C.secondary} label="카드발급고객 증가"     value={`${Math.round(sim.indirect.cardEffect).toLocaleString()}명`}   ctrlLabel="유입 고객 × n%" n={cardRate}    setN={setCardRate}    suffix="%" />
+              <IndirectCard icon={PiggyBank} color={C.secondary} label="수신 평잔 증가 효과"       value={`${Math.round(sim.indirect.depositEffect * 100).toLocaleString()}백만원`} ctrlLabel="사장님 신용대출 고객 1개월 평잔" n={depositRate} setN={setDepositRate} suffix="만원" />
+              <IndirectCard icon={Activity}  color={C.secondary} label="MAU 고객 증가"         value={`${Math.round(sim.indirect.mauEffect).toLocaleString()}명`}    ctrlLabel="유입 고객 × n%" n={mauRate}     setN={setMauRate}     suffix="%" />
+            </div>
+            <div style={S.miniNote}>* n 값은 사장님 대출 보유고객의 3개월 평균 실측 값이 입력되어 있으며, 수기 조정 가능함.</div>
+          </section>
+        </>
+      );
+    }
+
+    // ── ResultPage ──
+    function ResultPage({ activeEvent, setActiveEvent, weeklyByEvent, monthlyHigh, monthlyLow, funnelByEvent,
+                          weeklyFileByEvent, setWeeklyFileByEvent, setWeeklyByEvent,
+                          funnelFileByEvent, setFunnelFileByEvent, setFunnelByEvent }) {
+
+      const ev = EVENTS.find((e) => e.id === activeEvent);
+      const weekly = weeklyByEvent[activeEvent] ?? [];
+      const weeklyBefore = weekly.filter((d) => d.phase === "before");
+      const weeklyAfter  = weekly.filter((d) => d.phase === "after");
+
+      // 이벤트 탭 전환 시 성장 추세를 직관적으로 비교하기 위해 3개 이벤트 공통 Y축 상한 사용
+      const weeklyAxisMax = useMemo(() => {
+        const vals = Object.values(weeklyByEvent).flatMap((rows) =>
+          rows.flatMap((d) => [d.newLoan ?? 0, d.netLoan ?? 0])
+        );
+        const max = vals.length ? Math.max(...vals) : 0;
+        return Math.ceil((max * 1.15) / 10) * 10;
+      }, [weeklyByEvent]);
+
+      const weeklySummary = WEEKLY_KPI_DEFS.map((k) => {
+        const b = avg(weeklyBefore, k.key);
+        const a = avg(weeklyAfter,  k.key);
+        return { ...k, after: a, delta: b ? ((a - b) / b) * 100 : 0 };
+      });
+
+      const highBefore = monthlyHigh.filter((d) => ev.beforeMonths.includes(d.month));
+      const highAfter  = monthlyHigh.filter((d) => ev.afterMonths.includes(d.month));
+      const lowBefore  = monthlyLow.filter((d) => ev.beforeMonths.includes(d.month));
+      const lowAfter   = monthlyLow.filter((d) => ev.afterMonths.includes(d.month));
+
+      const highSummary = PROFIT_KPI_DEFS.map((k) => {
+        const b = avg(highBefore, k.key), a = avg(highAfter, k.key);
+        return { ...k, after: a, delta: b ? ((a - b) / b) * 100 : 0 };
+      });
+      const lowSummary = PROFIT_KPI_DEFS.map((k) => {
+        const b = avg(lowBefore, k.key), a = avg(lowAfter, k.key);
+        return { ...k, after: a, delta: b ? ((a - b) / b) * 100 : 0 };
+      });
+
+      // 통합 월간 차트 (고+중저)
+      const allMonths = ["1월","2월","3월","4월","5월","6월"];
+      const combinedChart = allMonths.map((m) => {
+        const h = monthlyHigh.find((d) => d.month === m) ?? {};
+        const l = monthlyLow.find((d)  => d.month === m) ?? {};
+        return {
+          name: m,
+          "이자수익(월)": ((h.interest ?? 0) + (l.interest ?? 0)) * 100,
+          "공헌이익(월)": ((h.contribution ?? 0) + (l.contribution ?? 0)) * 100,
+          "영업이익(월)": ((h.operatingProfit ?? 0) + (l.operatingProfit ?? 0)) * 100,
+        };
+      }).filter((d) => d["이자수익(월)"] > 0);
+
+      const funnel = funnelByEvent[activeEvent] ?? [];
+
+      function handleWeeklyUpload(e) {
+        const file = e.target.files?.[0]; if (!file) return;
+        setWeeklyFileByEvent((p) => ({ ...p, [activeEvent]: file.name }));
+        readCsvFile(file, parseWeekly, (parsed) => setWeeklyByEvent((p) => ({ ...p, [activeEvent]: parsed })),
+          "주간 실적 CSV 파싱 실패. 시트 헤더: week, phase, newLoan, netLoan, balance, count, newCust");
+      }
+      function handleFunnelUpload(e) {
+        const file = e.target.files?.[0]; if (!file) return;
+        setFunnelFileByEvent((p) => ({ ...p, [activeEvent]: file.name }));
+        readCsvFile(file, parseFunnelWide, (parsed) => setFunnelByEvent((p) => ({ ...p, [activeEvent]: parsed })),
+          "퍼널 CSV 파싱 실패. 시트 헤더: grade, platformInflow_before, platformInflow_after, preApprovalExec_before, preApprovalExec_after");
+      }
+
+      return (
+        <>
+          {/* 안내 배너 */}
+          <div style={S.resultIntro}>
+            <b>금리 전략 변경 시행 실적</b> — 시행일별 탭을 선택하여 해당 변경의 전/후 영업지표 및 수익성 변화를 확인합니다.{" "}
+            수익성 지표(이자수익·공헌이익·영업이익)는 <b>익월 4일 집계</b> 기준이며 고신용·중저신용으로 구분하여 표시합니다.
+          </div>
+
+          {/* 이벤트 탭 선택 */}
+          <div style={S.eventTabs}>
+            {EVENTS.map((e) => (
+              <button key={e.id} onClick={() => setActiveEvent(e.id)}
+                style={{ ...S.eventTab, ...(activeEvent === e.id ? S.eventTabActive : {}) }}>
+                {e.label}
+              </button>
+            ))}
+          </div>
+
+          {/* 이벤트별 업로드 버튼 */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
+            <label style={S.uploadBtnSm}><Upload size={13} /> 주간 실적 CSV ({ev.label.split(" ")[0]})<input type="file" accept=".csv" onChange={handleWeeklyUpload} hidden /></label>
+            <label style={S.uploadBtnSm}><Upload size={13} /> 퍼널 CSV ({ev.label.split(" ")[0]})<input type="file" accept=".csv" onChange={handleFunnelUpload} hidden /></label>
+            <span style={{ fontSize: 11, color: C.faint }}>주간: {weeklyFileByEvent[activeEvent]} · 퍼널: {funnelFileByEvent[activeEvent]}</span>
+          </div>
+
+          {/* ── 섹션 1: 주간 영업 지표 ── */}
+          <div style={S.sectionLabel}>
+            주간 영업 지표
+            <span style={S.sectionBadge}>매주 갱신</span>
+          </div>
+          <section style={{ ...S.cardGrid }}>
+            {weeklySummary.map((k, i) => (
+              <KpiCard key={k.key} label={k.label} value={k.fmt(k.after)} unit={k.unit} delta={k.delta} animDelay={i * 60} />
+            ))}
+          </section>
+          <section style={S.chartCard}>
+            <div style={S.chartTitle}>주간 신규대출 실행액 · 순증액 추이</div>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={weekly} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={C.gridLine} />
+                <XAxis dataKey="week" tick={{ fill: C.sub, fontSize: 12 }} />
+                <YAxis tick={{ fill: C.sub, fontSize: 12 }} unit="억" domain={[0, weeklyAxisMax]} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(1,20,167,.04)" }} />
+                <Legend wrapperStyle={{ fontSize: 12, color: C.text }} />
+                <ReferenceLine x={ev.refWeek} stroke={C.primary} strokeDasharray="4 4"
+                  label={{ value: "금리변경", fill: C.primary, fontSize: 11, position: "insideTopRight", offset: 8 }} />
+                <Bar dataKey="newLoan" name="신규실행액(주, 억)" fill={C.primary}   radius={[4,4,0,0]}>
+                  <LabelList dataKey="newLoan" position="top" formatter={(v) => v.toFixed(1)} style={{ fontSize: 10.5, fontWeight: 700, fill: C.primary }} />
+                </Bar>
+                <Bar dataKey="netLoan" name="순증액(주, 억)"     fill={C.secondary} radius={[4,4,0,0]}>
+                  <LabelList dataKey="netLoan" position="top" formatter={(v) => v.toFixed(1)} style={{ fontSize: 10.5, fontWeight: 700, fill: C.secondary }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div style={S.miniNote}>* 신규실행액 = 주간 신규대출 실행 금액 · 순증액 = 실행 − 상환(만기·중도)</div>
+          </section>
+
+          {/* ── 섹션 2: 수익성 지표 ── */}
+          <div style={S.sectionLabel}>
+            수익성 지표
+            <span style={{ ...S.sectionBadge, color: "#dc2626", borderColor: "rgba(220,38,38,.25)", background: "rgba(220,38,38,.05)" }}>익월 4일 집계</span>
+            <span style={{ fontSize: 11, color: C.faint, fontWeight: 400 }}>비교: {ev.beforeMonths.join("·")} 평균 → {ev.afterMonths.join("·")} 평균</span>
+          </div>
+
+          {/* 고신용자 수익성 */}
+          <div style={S.subSectionLabel}>
+            고신용자 수익성지표
+            <span style={{ fontSize: 11, color: C.sub, fontWeight: 400 }}>(신용평가 기준 고신용 — 전략등급과 독립)</span>
+          </div>
+          <section style={{ ...S.cardGrid }}>
+            {highSummary.map((k, i) => (
+              <KpiCard key={"h-"+k.key} label={k.label} value={k.fmt(k.after)} unit={k.unit} delta={k.delta} animDelay={i * 60} />
+            ))}
+          </section>
+
+          {/* 중저신용자 수익성 */}
+          <div style={S.subSectionLabel}>
+            중저신용자 수익성지표
+            <span style={{ fontSize: 11, color: C.sub, fontWeight: 400 }}>(신용평가 기준 중저신용 — 전략등급과 독립)</span>
+          </div>
+          <section style={{ ...S.cardGrid }}>
+            {lowSummary.map((k, i) => (
+              <KpiCard key={"l-"+k.key} label={k.label} value={k.fmt(k.after)} unit={k.unit} delta={k.delta} animDelay={i * 60} />
+            ))}
+          </section>
+
+          {/* 통합 월간 추이 차트 */}
+          <section style={S.chartCard}>
+            <div style={S.chartTitle}>월간 수익성 지표 추이 — 고신용 + 중저신용 통합</div>
+            <ResponsiveContainer width="100%" height={290}>
+              <BarChart data={combinedChart} margin={{ top: 26, right: 20, left: 10, bottom: 0 }} barCategoryGap="28%">
+                <CartesianGrid strokeDasharray="3 3" stroke={C.gridLine} />
+                <XAxis dataKey="name" tick={{ fill: C.sub, fontSize: 12 }} />
+                <YAxis tick={{ fill: C.sub, fontSize: 12 }} unit="백만원" width={80} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(1,20,167,.04)" }} />
+                <Legend wrapperStyle={{ fontSize: 12, color: C.text }} />
+                <ReferenceLine x="4월" stroke="#6b7488" strokeDasharray="3 3"
+                  label={{ value: "3/31", fill: "#6b7488", fontSize: 10, position: "top" }} />
+                <ReferenceLine x="5월" stroke="#6b7488" strokeDasharray="3 3"
+                  label={{ value: "4/23", fill: "#6b7488", fontSize: 10, position: "top" }} />
+                <ReferenceLine x="6월" stroke={C.primary} strokeDasharray="3 3"
+                  label={{ value: "5/29", fill: C.primary, fontSize: 10, position: "top" }} />
+                <Bar dataKey="이자수익(월)" fill={C.barInactive} radius={[4,4,0,0]}>
+                  <LabelList dataKey="이자수익(월)" position="top" formatter={(v) => Math.round(v).toLocaleString()} style={{ fontSize: 10, fontWeight: 700, fill: C.sub }} />
+                </Bar>
+                <Bar dataKey="공헌이익(월)" fill={C.secondary}  radius={[4,4,0,0]}>
+                  <LabelList dataKey="공헌이익(월)" position="top" formatter={(v) => Math.round(v).toLocaleString()} style={{ fontSize: 10, fontWeight: 700, fill: C.secondary }} />
+                </Bar>
+                <Bar dataKey="영업이익(월)" fill={C.primary}    radius={[4,4,0,0]}>
+                  <LabelList dataKey="영업이익(월)" position="top" formatter={(v) => Math.round(v).toLocaleString()} style={{ fontSize: 10, fontWeight: 700, fill: C.primary }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div style={S.miniNote}>
+              * 이자수익 → 공헌이익 → 영업이익 순으로 비용 차감 (고신용+중저신용 합산). 각 수직선은 금리 변경 시행일.<br />
+              고신용·중저신용 월간 수익성 CSV는 상단 업로드 버튼(고신용/중저신용)으로 교체하세요.
+            </div>
+          </section>
+
+          {/* ── 섹션 3: 퍼널 전환율 ── */}
+          <div style={S.sectionLabel}>퍼널 전환율 — {ev.label}</div>
+          <div style={S.funnelGrid}>
+            {[
+              { key: "platformInflow",  label: "플랫폼 → 당행 유입률", desc: "플랫폼 유입 후 당행 선택 비율 (전략등급별)", positive: true  },
+              { key: "preApprovalExec", label: "가심사승인 → 실행 전환율", desc: "가심사 승인 후 실행까지 전환 비율 (전략등급별)", positive: true },
+            ].map((m) => {
+              const chartData = funnel.map((d) => ({
+                grade: d.grade,
+                시행전: d[m.key]?.[0] ?? 0,
+                시행후: d[m.key]?.[1] ?? 0,
+              }));
+              return (
+                <section key={m.key} style={S.chartCard}>
+                  <div style={S.funnelTitle}>{m.label}</div>
+                  <div style={S.funnelDesc}>{m.desc}</div>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={chartData} margin={{ top: 22, right: 8, left: -12, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={C.gridLine} />
+                      <XAxis dataKey="grade" tick={{ fill: C.sub, fontSize: 11 }} />
+                      <YAxis tick={{ fill: C.sub, fontSize: 11 }} unit="%" />
+                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(1,20,167,.04)" }} />
+                      <Legend wrapperStyle={{ fontSize: 11, color: C.text }} />
+                      <Bar dataKey="시행전" fill={C.barInactive} radius={[3,3,0,0]}>
+                        <LabelList dataKey="시행전" position="top" formatter={(v) => v.toFixed(1)} style={{ fontSize: 10, fontWeight: 700, fill: C.sub }} />
+                      </Bar>
+                      <Bar dataKey="시행후" fill={C.primary}     radius={[3,3,0,0]}>
+                        <LabelList dataKey="시행후" position="top" formatter={(v) => v.toFixed(1)} style={{ fontSize: 10, fontWeight: 700, fill: C.primary }} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </section>
+              );
+            })}
+          </div>
+        </>
+      );
+    }
+
+    // ── App ──
+    function App() {
+      const [page, setPage]               = useState("sim");
+      const [activeEvent, setActiveEvent] = useState("ev331");
+      const [simBase, setSimBase]         = useState(DEMO_SIM_BASE);
+      const [baseFile, setBaseFile]       = useState("기본 가정값");
+      const [cof, setCof]                 = useState(COF_DEFAULT);
+      const [cardRate, setCardRate]       = useState(35);
+      const [depositRate, setDepositRate] = useState(338);
+      const [mauRate, setMauRate]         = useState(60);
+      const [adj, setAdj]                 = useState(() => DEMO_SIM_BASE.reduce((o, s) => ({ ...o, [s.grade]: 0 }), {}));
+
+      const [weeklyByEvent,     setWeeklyByEvent]     = useState(DEMO_WEEKLY);
+      const [weeklyFileByEvent, setWeeklyFileByEvent] = useState({ ev331: "데모 데이터", ev423: "데모 데이터", ev529: "데모 데이터" });
+      const [monthlyHigh,       setMonthlyHigh]       = useState(DEMO_MONTHLY_HIGH);
+      const [monthlyLow,        setMonthlyLow]        = useState(DEMO_MONTHLY_LOW);
+      const [monthlyHighFile,   setMonthlyHighFile]   = useState("데모 데이터");
+      const [monthlyLowFile,    setMonthlyLowFile]    = useState("데모 데이터");
+      const [funnelByEvent,     setFunnelByEvent]     = useState(DEMO_FUNNEL);
+      const [funnelFileByEvent, setFunnelFileByEvent] = useState({ ev331: "데모 데이터", ev423: "데모 데이터", ev529: "데모 데이터" });
+
+      const sim = useMemo(
+        () => runSimulation(adj, simBase, cof, { cardRate, depositRate, mauRate }),
+        [adj, simBase, cof, cardRate, depositRate, mauRate]
+      );
+      const handleFindOptimal = () => setAdj(findOptimalAdj(simBase, cof));
+      const handleResetAdj    = () => setAdj(simBase.reduce((o, s) => ({ ...o, [s.grade]: 0 }), {}));
+      function handleBaseUpload(e) {
+        const file = e.target.files?.[0]; if (!file) return;
+        setBaseFile(file.name);
+        readCsvFile(file, parseSimBase, (parsed) => { setSimBase(parsed); setAdj(parsed.reduce((o, s) => ({ ...o, [s.grade]: 0 }), {})); },
+          "기준값 CSV 파싱 실패. 시트 헤더: grade, balance, count, newWk, netWk, churn, margin, ...");
+      }
+      function handleMonthlyHighUpload(e) {
+        const file = e.target.files?.[0]; if (!file) return;
+        setMonthlyHighFile(file.name);
+        readCsvFile(file, parseMonthly, setMonthlyHigh, "고신용 수익성 CSV 파싱 실패. 시트 헤더: month, interest, contribution, operatingProfit, roa");
+      }
+      function handleMonthlyLowUpload(e) {
+        const file = e.target.files?.[0]; if (!file) return;
+        setMonthlyLowFile(file.name);
+        readCsvFile(file, parseMonthly, setMonthlyLow, "중저신용 수익성 CSV 파싱 실패. 시트 헤더: month, interest, contribution, operatingProfit, roa");
+      }
+
+      return (
+        <div style={S.page}>
+          <header style={S.header}>
+            <div style={S.headerLeft}>
+              <img src={LOGO_SRC} alt="Kbank" style={S.logo} />
+              <div>
+                <div style={S.eyebrow}>금리전략 · 재무</div>
+                <h1 style={S.title}>Corporate여신팀 · 사장님신용대출 금리전략 대시보드</h1>
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+              <label style={S.uploadBtn}><Upload size={15} /><span>고신용 수익성 CSV (월간)</span><input type="file" accept=".csv" onChange={handleMonthlyHighUpload} hidden /></label>
+              <label style={{ ...S.uploadBtnSm, fontSize: 12.5 }}><Upload size={13} /> 중저신용 수익성 CSV (월간)<input type="file" accept=".csv" onChange={handleMonthlyLowUpload} hidden /></label>
+              <span style={{ fontSize: 11, color: C.faint, textAlign: "right" }}>고: {monthlyHighFile} · 중저: {monthlyLowFile}</span>
+            </div>
+          </header>
+          <nav style={S.tabs}>
+            <button onClick={() => setPage("sim")}    style={{ ...S.tab, ...(page === "sim"    ? S.tabActive : {}) }}><Sliders   size={15} /> 금리 조정 시뮬레이터</button>
+            <button onClick={() => setPage("result")} style={{ ...S.tab, ...(page === "result" ? S.tabActive : {}) }}><BarChart3 size={15} /> 시행 실적</button>
+          </nav>
+          {page === "sim"
+            ? <Simulator sim={sim} adj={adj} setAdj={setAdj} simBase={simBase} cof={cof} setCof={setCof}
+                cardRate={cardRate} setCardRate={setCardRate} depositRate={depositRate} setDepositRate={setDepositRate}
+                mauRate={mauRate} setMauRate={setMauRate} onFindOptimal={handleFindOptimal}
+                onResetAdj={handleResetAdj} onBaseUpload={handleBaseUpload} baseFile={baseFile} />
+            : <ResultPage
+                activeEvent={activeEvent} setActiveEvent={setActiveEvent}
+                weeklyByEvent={weeklyByEvent} setWeeklyByEvent={setWeeklyByEvent}
+                weeklyFileByEvent={weeklyFileByEvent} setWeeklyFileByEvent={setWeeklyFileByEvent}
+                monthlyHigh={monthlyHigh} monthlyLow={monthlyLow}
+                funnelByEvent={funnelByEvent} setFunnelByEvent={setFunnelByEvent}
+                funnelFileByEvent={funnelFileByEvent} setFunnelFileByEvent={setFunnelFileByEvent}
+              />
+          }
+        </div>
+      );
+    }
+
+    createRoot(document.getElementById("root")).render(<React.StrictMode><App /></React.StrictMode>);
+  </script>
+</body>
+</html>
