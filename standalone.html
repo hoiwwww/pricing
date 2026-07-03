@@ -124,8 +124,13 @@
     const EVENTS = [
       { id: "ev331", label: "3/31 본부조정금리변경",       refWeek: "4월 1주", refMonth: "4월", beforeMonths: ["1월","2월","3월"], afterMonths: ["4월"] },
       { id: "ev423", label: "4/23 본부조정금리변경",       refWeek: "5월 1주", refMonth: "5월", beforeMonths: ["3월","4월"],       afterMonths: ["5월"] },
-      { id: "ev529", label: "5/29 토스/현카 우대금리 도입", refWeek: "6월 1주", refMonth: "6월", beforeMonths: ["4월","5월"],       afterMonths: ["6월"] },
+      { id: "ev529", label: "5/29 토스 우대금리 도입", refWeek: "6월 1주", refMonth: "6월", beforeMonths: ["4월","5월"],       afterMonths: ["6월"] },
     ];
+    const BP_CHANGES = {
+      ev331: [{ label: "1~4등급", bp: -6 }],
+      ev423: [{ label: "1등급", bp: -5 }, { label: "2등급", bp: -8 }, { label: "3등급", bp: -44 }, { label: "4등급", bp: -39 }],
+      ev529: [{ label: "토스 플랫폼 유입고객 전 등급", bp: -10 }],
+    };
 
     // ── 주간 영업 지표 (이벤트별) ──
     const DEMO_WEEKLY = {
@@ -749,6 +754,16 @@
             ))}
           </div>
 
+          {/* 등급별 BP 조정 내역 칩 */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: C.faint, fontWeight: 500, whiteSpace: "nowrap" }}>금리 조정 내역</span>
+            {(BP_CHANGES[activeEvent] || []).map((item) => (
+              <span key={item.label} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, background: "rgba(59,130,246,.08)", border: "1px solid rgba(59,130,246,.25)", fontSize: 12, fontWeight: 600, color: C.primary, whiteSpace: "nowrap" }}>
+                {item.label} <span style={{ color: "#dc2626" }}>{item.bp > 0 ? `+${item.bp}` : item.bp}bp</span>
+              </span>
+            ))}
+          </div>
+
           {/* 이벤트별 업로드 버튼 */}
           <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
             <label style={S.uploadBtnSm}><Upload size={13} /> 주간 실적 CSV ({ev.label.split(" ")[0]})<input type="file" accept=".csv" onChange={handleWeeklyUpload} hidden /></label>
@@ -793,6 +808,12 @@
             수익성 지표
             <span style={{ ...S.sectionBadge, color: "#dc2626", borderColor: "rgba(220,38,38,.25)", background: "rgba(220,38,38,.05)" }}>익월 중순 집계</span>
             <span style={{ fontSize: 11, color: C.faint, fontWeight: 400 }}>비교: {ev.beforeMonths.join("·")} 평균 → {ev.afterMonths.join("·")} 평균</span>
+          </div>
+
+          {/* 안분 추정 안내 배너 */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 13px", marginBottom: 10, background: "rgba(234,179,8,.08)", border: "1px solid rgba(234,179,8,.35)", borderRadius: 8, fontSize: 12, color: "#92400e", fontWeight: 500 }}>
+            <span style={{ fontSize: 15 }}>⚠</span>
+            현재 고신용/중저신용 수익성 지표는 고객 비율 기반 안분 추정치입니다. 실데이터 구축 및 반영 예정: 2026년 8월말
           </div>
 
           {/* 고신용자 수익성 */}
@@ -952,7 +973,7 @@
           </header>
           <nav style={S.tabs}>
             <button onClick={() => setPage("sim")}    style={{ ...S.tab, ...(page === "sim"    ? S.tabActive : {}) }}><Sliders   size={15} /> 금리 조정 시뮬레이터</button>
-            <button onClick={() => setPage("result")} style={{ ...S.tab, ...(page === "result" ? S.tabActive : {}) }}><BarChart3 size={15} /> 시행 실적</button>
+            <button onClick={() => setPage("result")} style={{ ...S.tab, ...(page === "result" ? S.tabActive : {}) }}><BarChart3 size={15} /> 성과 모니터링</button>
           </nav>
           {page === "sim"
             ? <Simulator sim={sim} adj={adj} setAdj={setAdj} simBase={simBase} cof={cof} setCof={setCof}
