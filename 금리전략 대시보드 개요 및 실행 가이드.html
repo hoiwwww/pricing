@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VS Code &amp; Claude Code 시작 가이드</title>
+<title>금리전략 대시보드 개요 및 실행 가이드</title>
 <style>
   :root{
     --primary:#0114A7; --secondary:#4262FF; --gray:#EDF1F7; --border:#DCE3EF;
@@ -125,6 +125,15 @@
   .footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);font-size:11px;color:var(--faint);
     display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 
+  /* reference table */
+  .refTable{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--cardBg);border:1px solid var(--border);
+    border-radius:14px;overflow:hidden;}
+  .refTable th{text-align:left;padding:11px 14px;color:var(--sub);font-weight:700;font-size:11.5px;
+    background:var(--gray);border-bottom:1px solid var(--border);}
+  .refTable td{text-align:left;padding:12px 14px;color:var(--text);border-bottom:1px solid var(--gray);vertical-align:top;}
+  .refTable tr:last-child td{border-bottom:none;}
+  .refTable td.file{color:var(--primary);font-weight:600;font-family:"Consolas","D2Coding",monospace;font-size:11.5px;}
+
   @media print{
     .nav{display:none;}
     body{background:#fff;}
@@ -140,7 +149,7 @@
       <img class="logo" alt="logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58'%3E%3Crect width='58' height='58' rx='13' fill='%230114A7'/%3E%3Ctext x='29' y='38' font-size='24' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'%3EK%3C/text%3E%3C/svg%3E" />
       <div>
         <div class="eyebrow">회의 사전 배포자료</div>
-        <h1 class="title">VS Code &amp; Claude Code 시작 가이드</h1>
+        <h1 class="title">금리전략 대시보드 개요 및 실행 가이드</h1>
       </div>
     </div>
     <div class="headerRight">
@@ -151,6 +160,7 @@
 
   <!-- ── quick nav ── -->
   <div class="nav">
+    <a href="#dashboard-overview">📊 대시보드 개요</a>
     <a href="#about">① VS Code란</a>
     <a href="#install-vscode">② 설치하기</a>
     <a href="#korean">③ 한글 언어팩</a>
@@ -159,8 +169,28 @@
     <a href="#ui">⑥ 화면 구성</a>
   </div>
 
+  <!-- ── 대시보드 개요 ── -->
+  <div class="sectionLabel" id="dashboard-overview"><span class="sectionNum">📊</span>standalone.html (금리전략 대시보드) 개요</div>
+  <div class="cardGrid">
+    <div class="card">
+      <div class="cardTitle">📝 무엇인가요</div>
+      <div class="cardBody">사장님신용대출 상품의 금리 조정(bp 변경)에 따라 신규유입·이탈·수익성이 어떻게 변하는지 시뮬레이션하고, 실제 시행 이후 성과를 추적하는 대시보드입니다. 설치 없이 웹 브라우저로 바로 실행되는 단일 HTML 파일입니다.</div>
+    </div>
+    <div class="card">
+      <div class="cardTitle">🗂️ 두 가지 탭 구성</div>
+      <div class="cardBody"><b>시뮬레이터</b> — 등급별 금리 조정 전, 신규유입·수익성 변화를 미리 계산 · <b>시행실적</b> — 실제 금리조정 이후 주간·월간 실적을 CSV로 업로드해 시행 전후를 비교</div>
+    </div>
+    <div class="card">
+      <div class="cardTitle">▶️ 실행 방법</div>
+      <div class="cardBody">폴더 안 <span class="inlineCode">standalone.html</span> 파일을 더블클릭하면 별도 설치 없이 웹 브라우저에서 바로 열립니다. VS Code는 이 파일의 내용을 살펴보거나 수정할 때 필요한 도구입니다.</div>
+    </div>
+  </div>
+  <div class="assumptionBox">
+    💡 데이터 업로드 방법(어떤 CSV가 어느 버튼에 매칭되는지)은 이 문서 하단의 <b>"참고 · CSV 업로드 매칭표"</b> 섹션을, 상세 기능 명세는 별도 전달드린 <span class="inlineCode">요구사항정의서.md</span>를 참고해 주세요.
+  </div>
+
   <div class="intro">
-    이 문서는 <b>[사장님 신용대출 금리전략 대시보드]를 제작한 Tool인 VS Code</b>에 대한 기초 설명 자료입니다.
+    아래부터는 <b>VS Code</b>(대시보드를 만든 편집기 도구)에 대한 기초 설명과 설치 방법을 안내드립니다.
     회의 전 가이드를 통해 VS Code와 Claude Code를 설치해주신다면 조금 더 수월한 이해가 가능합니다.
   </div>
 
@@ -296,7 +326,7 @@
 
   <!-- ── 5. 배포받은 폴더 불러오기 ── -->
   <div class="sectionLabel" id="open-folder"><span class="sectionNum">5</span>배포받은 폴더 불러오기</div>
-  <div class="assumptionBox">메일/메신저로 받은 <span class="inlineCode">신용v0.2</span> 폴더(standalone.html 포함)를 VS Code로 열어보는 과정입니다.</div>
+  <div class="assumptionBox">메일/메신저로 받은 폴더(standalone.html 포함)를 VS Code로 열어보는 과정입니다.</div>
 
   <div class="stepCard">
     <div class="stepNum">1</div>
@@ -319,6 +349,12 @@
       <div class="stepDesc">왼쪽 탐색기 패널에 <span class="inlineCode">standalone.html</span>을 포함한 폴더 내 파일 목록이 표시되면 정상적으로 불러온 것입니다.</div>
     </div>
   </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="cardTitle">📄 잠깐, <span class="inlineCode">.md</span> 파일은 무엇인가요?</div>
+    <div class="cardBody">폴더 안에는 <span class="inlineCode">.html</span> 외에 <span class="inlineCode">CSV_데이터_가이드.md</span>, <span class="inlineCode">요구사항정의서.md</span>처럼 <b>.md(Markdown)</b> 확장자 파일도 있습니다. 이는 서식이 적용된 <b>설명 문서</b>로, 대시보드의 데이터 구조·계산식·요구사항 등을 정리해 둔 참고 자료입니다. VS Code에서 열면 제목·목록 등이 자동으로 보기 좋게 표시됩니다 (한글/워드 문서와 비슷한 역할이라고 생각하시면 됩니다).</div>
+  </div>
+
   <div class="stepCard">
     <div class="stepNum">4</div>
     <div class="stepBody">
@@ -405,8 +441,50 @@
       <li><span class="checkDot"></span>VS Code 설치 완료 (실행 시 화면이 정상적으로 뜨는지)</li>
       <li><span class="checkDot"></span>한글 언어팩 적용 완료 (메뉴가 한글로 표시되는지)</li>
       <li><span class="checkDot"></span>Claude Code 확장 설치 및 로그인 완료</li>
-      <li><span class="checkDot"></span>배포받은 산출물 폴더(<span class="inlineCode">신용v0.2</span> 등)를 VS Code에서 열어본 적 있는지</li>
+      <li><span class="checkDot"></span>배포받은 산출물 폴더를 VS Code에서 열어본 적 있는지</li>
     </ul>
+  </div>
+
+  <!-- ── 참고: CSV 업로드 매칭표 ── -->
+  <div class="sectionLabel"><span class="sectionNum">📎</span>참고 · standalone.html CSV 업로드 매칭표</div>
+  <div class="intro">standalone.html을 웹 브라우저로 실행한 뒤, 각 업로드 버튼에는 아래 표에 맞는 CSV 파일을 선택하시면 됩니다.</div>
+
+  <table class="refTable">
+    <thead>
+      <tr><th>화면 위치 · 버튼</th><th>매칭 CSV 파일</th><th>비고</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>시뮬레이터 탭 · <b>"기준값 CSV"</b></td>
+        <td class="file">template_2_simbase(UFT).csv</td>
+        <td>등급별 잔액·건수·이탈율·마진·원가율·탄력성 등 시뮬레이터 기준 데이터</td>
+      </tr>
+      <tr>
+        <td>시행실적 탭 · 이벤트 탭(3/31·4/23·5/29) 선택 후 <b>"주간 실적 CSV"</b></td>
+        <td class="file">template_1_weekly_ev331 / ev423 / ev529(UFT).csv</td>
+        <td>현재 선택된 이벤트 탭과 <b>동일한 이벤트</b>의 파일을 올려야 합니다</td>
+      </tr>
+      <tr>
+        <td>시행실적 탭 · 이벤트 탭 선택 후 <b>"퍼널 CSV"</b></td>
+        <td class="file">template_4_funnel_ev331 / ev423 / ev529(UFT).csv</td>
+        <td>이벤트별 유입 → 실행 전환 퍼널 데이터, 이벤트 매칭 동일하게 적용</td>
+      </tr>
+      <tr>
+        <td>시행실적 탭 상단 · <b>"고신용 수익성 CSV (월간)"</b></td>
+        <td class="file">template_3_monthly_high(UFT).csv</td>
+        <td>고신용 등급 월간 이자수익/공헌이익/영업이익</td>
+      </tr>
+      <tr>
+        <td>시행실적 탭 상단 · <b>"중저신용 수익성 CSV (월간)"</b></td>
+        <td class="file">template_3_monthly_low(UFT).csv</td>
+        <td>중저신용 등급 월간 수익성 지표</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="assumptionBox">
+    💡 <span class="inlineCode">template_5_elasticity</span>, <span class="inlineCode">template_6_stock_index</span>, <span class="inlineCode">template_6_weekly_churn</span> 파일은 화면에 직접 업로드하는 파일이 <b>아닙니다</b>.
+    탄력성 계수(elasticity)를 별도로 재추정할 때 쓰는 원천 데이터이며, 산출된 값은 이미 <span class="inlineCode">template_2_simbase(UFT).csv</span>의 elasticity 항목에 반영되어 있습니다.
   </div>
 
   <div class="footer">
