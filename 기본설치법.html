@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VS Code &amp; Claude Code 시작 가이드</title>
+<style>
+  :root{
+    --primary:#0114A7; --secondary:#4262FF; --gray:#EDF1F7; --border:#DCE3EF;
+    --text:#1A2138; --sub:#6B7488; --faint:#9AA3B5; --cardBg:#FFFFFF;
+    --up:#16a34a; --down:#dc2626; --warnBg:rgba(234,179,8,.08); --warnBorder:rgba(234,179,8,.35); --warnText:#92400e;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;padding:0;background:var(--gray);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic","맑은 고딕","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .page{max-width:1040px;margin:0 auto;padding:32px 24px 80px;}
+
+  /* header */
+  .header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;}
+  .headerLeft{display:flex;align-items:center;gap:14px;}
+  .logo{width:58px;height:58px;border-radius:13px;flex-shrink:0;}
+  .eyebrow{font-size:11px;letter-spacing:2px;color:var(--secondary);font-weight:700;margin-bottom:8px;}
+  .title{font-size:26px;font-weight:700;margin:0;letter-spacing:-0.5px;color:var(--primary);}
+  .subtitle{font-size:12.5px;color:var(--sub);margin-top:6px;}
+  .headerRight{font-size:11px;color:var(--faint);text-align:right;line-height:1.7;}
+  .verBadge{display:inline-block;font-size:11px;font-weight:600;color:var(--secondary);
+    background:rgba(66,98,255,.08);border:1px solid rgba(66,98,255,.25);border-radius:6px;padding:2px 8px;margin-bottom:4px;}
+
+  /* nav */
+  .nav{display:flex;gap:8px;margin:24px 0 28px;flex-wrap:wrap;position:sticky;top:12px;z-index:10;}
+  .nav a{display:inline-flex;align-items:center;gap:6px;background:var(--cardBg);color:var(--sub);
+    border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:600;
+    text-decoration:none;box-shadow:0 1px 3px rgba(1,20,167,.04);}
+  .nav a:hover{border-color:var(--secondary);color:var(--secondary);}
+
+  /* section */
+  .sectionLabel{font-size:15px;font-weight:700;color:var(--primary);margin:36px 0 16px;
+    padding-left:14px;border-left:3px solid var(--primary);display:flex;align-items:center;gap:10px;}
+  .sectionNum{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+    border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:700;flex-shrink:0;}
+  .subLabel{font-size:13px;font-weight:700;color:var(--text);margin:20px 0 12px;padding-left:12px;
+    border-left:2px solid var(--secondary);}
+
+  .intro{font-size:13px;color:var(--text);background:var(--cardBg);border:1px solid var(--border);
+    border-radius:12px;padding:16px 20px;margin-bottom:8px;line-height:1.7;}
+
+  .assumptionBox{background:rgba(66,98,255,.07);border:1px solid rgba(66,98,255,.22);border-radius:10px;
+    padding:12px 16px;font-size:12.5px;color:var(--primary);line-height:1.7;margin:14px 0;}
+  .warnBox{display:flex;align-items:flex-start;gap:8px;background:var(--warnBg);border:1px solid var(--warnBorder);
+    border-radius:9px;padding:11px 16px;font-size:12.5px;color:var(--warnText);line-height:1.7;margin:14px 0;}
+
+  /* cards */
+  .cardGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px;}
+  .card{background:var(--cardBg);border:1px solid var(--border);border-radius:16px;padding:18px 20px;
+    box-shadow:0 1px 3px rgba(1,20,167,.04);}
+  .cardTitle{font-size:13.5px;font-weight:700;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+  .cardBody{font-size:12.5px;color:var(--sub);line-height:1.7;}
+
+  /* step list */
+  .stepCard{display:flex;gap:14px;background:var(--cardBg);border:1px solid var(--border);border-radius:14px;
+    padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(1,20,167,.04);}
+  .stepNum{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:var(--secondary);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+  .stepBody{flex:1;}
+  .stepTitle{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .stepDesc{font-size:12.5px;color:var(--sub);line-height:1.7;}
+  .stepDesc code, .inlineCode{background:var(--gray);border:1px solid var(--border);border-radius:5px;
+    padding:1px 6px;font-family:"Consolas","D2Coding",monospace;font-size:12px;color:var(--primary);}
+
+  .codeBlock{background:#161B2E;color:#D7E0FF;border-radius:10px;padding:12px 16px;font-family:"Consolas","D2Coding",monospace;
+    font-size:12.5px;line-height:1.8;margin-top:8px;overflow-x:auto;}
+  .codeBlock .cmt{color:#7C88B8;}
+
+  /* checklist */
+  .checklist{background:var(--cardBg);border:2px solid var(--primary);border-radius:16px;padding:20px 22px;
+    box-shadow:0 4px 16px rgba(1,20,167,.08);margin-bottom:8px;}
+  .checklist h3{margin:0 0 12px;font-size:14px;color:var(--primary);}
+  .checklist ul{margin:0;padding:0;list-style:none;}
+  .checklist li{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--text);padding:7px 0;
+    border-bottom:1px solid var(--gray);}
+  .checklist li:last-child{border-bottom:none;}
+  .checkDot{flex-shrink:0;width:18px;height:18px;border-radius:50%;border:2px solid var(--up);position:relative;}
+  .checkDot::after{content:"";position:absolute;left:4px;top:1px;width:5px;height:9px;border-right:2px solid var(--up);
+    border-bottom:2px solid var(--up);transform:rotate(45deg);}
+
+  /* vscode mockup */
+  .mockWrap{border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(1,20,167,.06);
+    margin:16px 0 8px;background:#fff;}
+  .mockTitleBar{height:30px;background:var(--text);display:flex;align-items:center;padding:0 12px;gap:8px;}
+  .mockDot{width:9px;height:9px;border-radius:50%;}
+  .mockTitleText{flex:1;text-align:center;color:#B9C2DB;font-size:11px;margin-right:36px;}
+  .mockBody{display:flex;height:300px;font-size:0;}
+  .mockActivity{width:46px;background:#1A2138;display:flex;flex-direction:column;align-items:center;padding-top:12px;gap:14px;}
+  .mockIcon{width:22px;height:22px;border-radius:6px;background:#4A5578;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:10.5px;font-weight:700;font-family:-apple-system,sans-serif;}
+  .mockIcon.active{background:var(--secondary);}
+  .mockSide{width:190px;background:#F4F6FB;border-right:1px solid var(--border);padding:12px;}
+  .mockSideTitle{font-size:10px;color:var(--faint);font-weight:700;letter-spacing:1px;margin-bottom:10px;font-family:-apple-system,sans-serif;}
+  .mockFile{font-size:11px;color:var(--sub);padding:4px 0 4px 10px;font-family:-apple-system,sans-serif;}
+  .mockFile.on{color:var(--primary);font-weight:700;background:#E4E9F7;border-radius:5px;}
+  .mockEditor{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .mockTabs{height:34px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:stretch;}
+  .mockTab{padding:0 16px;display:flex;align-items:center;font-size:11px;color:var(--sub);border-right:1px solid var(--border);font-family:-apple-system,sans-serif;}
+  .mockTab.on{color:var(--text);border-top:2px solid var(--secondary);font-weight:700;}
+  .mockCodeArea{flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:8px;}
+  .codeLine{height:8px;border-radius:3px;background:#E7ECF5;}
+  .mockClaude{width:210px;background:#fff;border-left:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:8px;}
+  .mockClaudeHead{font-size:10.5px;font-weight:700;color:var(--primary);font-family:-apple-system,sans-serif;margin-bottom:4px;}
+  .bubble{border-radius:8px;padding:8px 10px;font-size:9.5px;line-height:1.5;font-family:-apple-system,sans-serif;}
+  .bubble.user{background:var(--gray);color:var(--text);align-self:flex-end;}
+  .bubble.bot{background:rgba(66,98,255,.08);color:var(--primary);}
+  .mockPanel{height:60px;background:#0F1524;color:#8FE39A;font-family:"Consolas",monospace;font-size:10px;
+    padding:8px 14px;line-height:1.5;}
+  .mockStatus{height:22px;background:var(--primary);color:#fff;display:flex;align-items:center;gap:14px;
+    padding:0 12px;font-size:9.5px;font-family:-apple-system,sans-serif;}
+
+  .legendGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:14px;}
+  .legendItem{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--sub);line-height:1.6;}
+  .legendNum{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--secondary);color:#fff;
+    font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .legendItem b{color:var(--text);}
+
+  .footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);font-size:11px;color:var(--faint);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+
+  @media print{
+    .nav{display:none;}
+    body{background:#fff;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── header ── -->
+  <div class="header">
+    <div class="headerLeft">
+      <img class="logo" alt="logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58'%3E%3Crect width='58' height='58' rx='13' fill='%230114A7'/%3E%3Ctext x='29' y='38' font-size='24' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'%3EK%3C/text%3E%3C/svg%3E" />
+      <div>
+        <div class="eyebrow">회의 사전 배포자료</div>
+        <h1 class="title">VS Code &amp; Claude Code 시작 가이드</h1>
+      </div>
+    </div>
+    <div class="headerRight">
+      <div class="verBadge">사전 준비 자료 v1.0</div><br/>
+      작성일 2026-07-16 · Corporate여신팀 채종호
+    </div>
+  </div>
+
+  <!-- ── quick nav ── -->
+  <div class="nav">
+    <a href="#about">① VS Code란</a>
+    <a href="#install-vscode">② 설치하기</a>
+    <a href="#korean">③ 한글 언어팩</a>
+    <a href="#claude">④ Claude Code 설치</a>
+    <a href="#open-folder">⑤ 폴더 불러오기</a>
+    <a href="#ui">⑥ 화면 구성</a>
+  </div>
+
+  <div class="intro">
+    이 문서는 <b>[사장님 신용대출 금리전략 대시보드]를 제작한 Tool인 VS Code</b>에 대한 기초 설명 자료입니다.
+    회의 전 가이드를 통해 VS Code와 Claude Code를 설치해주신다면 조금 더 수월한 이해가 가능합니다.
+  </div>
+
+  <!-- ── 1. VS Code란 ── -->
+  <div class="sectionLabel" id="about"><span class="sectionNum">1</span>VS Code란 무엇인가요?</div>
+  <div class="cardGrid">
+    <div class="card">
+      <div class="cardTitle">📝 한 줄 정의</div>
+      <div class="cardBody">Microsoft에서 만든 <b>무료 코드 편집기</b>입니다. 문서 작업의 "한컴오피스"처럼, 코드·설정·데이터 파일 작업의 표준 도구로 널리 쓰입니다.</div>
+    </div>
+    <div class="card">
+      <div class="cardTitle">🤔 왜 필요한가요</div>
+      <div class="cardBody">이번에 배포된 <span class="inlineCode">standalone.html</span> 같은 산출물을 열람·수정하고, Claude Code와 함께 대화하며 데이터/화면을 조정하는 <b>작업 창구</b>가 됩니다.</div>
+    </div>
+    <div class="card">
+      <div class="cardTitle">✅ 특징</div>
+      <div class="cardBody">무료 · 가볍고 빠름 · 한글 지원 · 확장 프로그램(Extension)으로 기능 추가 · Windows/Mac 모두 지원</div>
+    </div>
+  </div>
+  <div class="assumptionBox">
+    💡 <b>비유하면:</b> VS Code는 "메모장"의 강화판입니다. 파일을 열고 보고 고칠 수 있고, 필요한 기능(한글 언어팩, Claude Code 등)은 확장 프로그램으로 나중에 추가합니다.
+  </div>
+
+  <!-- ── 2. 설치하기 ── -->
+  <div class="sectionLabel" id="install-vscode"><span class="sectionNum">2</span>VS Code 설치하기 (Windows 기준)</div>
+
+  <div class="stepCard">
+    <div class="stepNum">1</div>
+    <div class="stepBody">
+      <div class="stepTitle">공식 사이트 접속</div>
+      <div class="stepDesc">웹 브라우저에서 <span class="inlineCode">code.visualstudio.com</span> 접속 → 화면 중앙의 <b>"Download for Windows"</b> 버튼 클릭</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">2</div>
+    <div class="stepBody">
+      <div class="stepTitle">설치 파일 실행</div>
+      <div class="stepDesc">다운로드된 <span class="inlineCode">VSCodeUserSetup-x64-*.exe</span> 파일을 더블클릭하여 실행합니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">3</div>
+    <div class="stepBody">
+      <div class="stepTitle">사용권 계약에 동의</div>
+      <div class="stepDesc">"동의합니다"를 선택하고 <b>다음</b>을 눌러 진행합니다. 설치 위치는 기본값 그대로 두어도 됩니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">4</div>
+    <div class="stepBody">
+      <div class="stepTitle">추가 작업 선택 화면</div>
+      <div class="stepDesc">"PATH에 추가" 항목은 <b>기본 체크된 상태 그대로 유지</b>합니다 (나중에 터미널에서 명령어로 실행할 때 필요). 바탕화면 아이콘 생성 등 원하는 옵션을 추가로 체크해도 무방합니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">5</div>
+    <div class="stepBody">
+      <div class="stepTitle">설치 완료 및 실행 확인</div>
+      <div class="stepDesc">설치가 끝나면 자동으로 VS Code가 실행됩니다. 이후에는 시작 메뉴에서 <span class="inlineCode">Visual Studio Code</span>를 검색해 실행하면 됩니다.</div>
+    </div>
+  </div>
+
+  <!-- ── 3. 한글 언어팩 ── -->
+  <div class="sectionLabel" id="korean"><span class="sectionNum">3</span>한글 언어팩 설치하기</div>
+  <div class="assumptionBox">기본 설치 상태는 <b>영문 메뉴</b>입니다. 아래 과정으로 한글 메뉴로 바꿀 수 있습니다 (선택 사항이지만 강력 권장).</div>
+
+  <div class="stepCard">
+    <div class="stepNum">1</div>
+    <div class="stepBody">
+      <div class="stepTitle">확장(Extensions) 메뉴 열기</div>
+      <div class="stepDesc">VS Code 왼쪽 세로 아이콘 바(액티비티 바)에서 <b>네모 4개 아이콘</b>을 클릭합니다. 단축키 <span class="inlineCode">Ctrl + Shift + X</span></div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">2</div>
+    <div class="stepBody">
+      <div class="stepTitle">"Korean Language Pack" 검색</div>
+      <div class="stepDesc">검색창에 <span class="inlineCode">Korean Language Pack</span> 입력 → Microsoft에서 제공하는 <b>"Korean Language Pack for Visual Studio Code"</b>를 선택합니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">3</div>
+    <div class="stepBody">
+      <div class="stepTitle">Install 클릭 후 재시작</div>
+      <div class="stepDesc">설치가 끝나면 화면 우측 하단에 <span class="inlineCode">Change Language and Restart</span> 알림이 뜹니다. 클릭하면 VS Code가 재시작되며 한글 메뉴로 바뀝니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">4</div>
+    <div class="stepBody">
+      <div class="stepTitle">(알림이 안 뜰 경우) 수동으로 변경</div>
+      <div class="stepDesc"><span class="inlineCode">Ctrl + Shift + P</span> → <span class="inlineCode">Configure Display Language</span> 입력 → 목록에서 <span class="inlineCode">ko</span> 선택 → 재시작</div>
+    </div>
+  </div>
+
+  <!-- ── 4. Claude Code 설치 ── -->
+  <div class="sectionLabel" id="claude"><span class="sectionNum">4</span>Claude Code 설치 및 로그인</div>
+  <div class="stepCard">
+    <div class="stepNum">1</div>
+    <div class="stepBody">
+      <div class="stepTitle">확장 메뉴에서 검색</div>
+      <div class="stepDesc"><span class="inlineCode">Ctrl + Shift + X</span>로 확장 메뉴를 열고 <span class="inlineCode">Claude Code</span>를 검색합니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">2</div>
+    <div class="stepBody">
+      <div class="stepTitle">Anthropic 제공 확장 설치</div>
+      <div class="stepDesc">게시자(Publisher)가 <b>Anthropic</b>으로 표기된 "Claude Code" 확장을 선택하고 Install을 클릭합니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">3</div>
+    <div class="stepBody">
+      <div class="stepTitle">Claude 아이콘 확인</div>
+      <div class="stepDesc">설치가 끝나면 왼쪽 액티비티 바에 <b>Claude 아이콘</b>이 새로 생깁니다. 클릭해 패널을 엽니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">4</div>
+    <div class="stepBody">
+      <div class="stepTitle">계정 로그인</div>
+      <div class="stepDesc">"Sign in" 버튼 클릭 → 브라우저가 열리면 사내에서 발급받은 Anthropic 계정으로 로그인 → 권한 승인(Authorize) 후 VS Code로 돌아옵니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">5</div>
+    <div class="stepBody">
+      <div class="stepTitle">로그인 완료 확인</div>
+      <div class="stepDesc">Claude 패널 하단 입력창에 아무 질문(예: "안녕")을 입력해 응답이 오는지 확인하면 준비 완료입니다.</div>
+    </div>
+  </div>
+
+  <!-- ── 5. 배포받은 폴더 불러오기 ── -->
+  <div class="sectionLabel" id="open-folder"><span class="sectionNum">5</span>배포받은 폴더 불러오기</div>
+  <div class="assumptionBox">메일/메신저로 받은 <span class="inlineCode">신용v0.2</span> 폴더(standalone.html 포함)를 VS Code로 열어보는 과정입니다.</div>
+
+  <div class="stepCard">
+    <div class="stepNum">1</div>
+    <div class="stepBody">
+      <div class="stepTitle">배포받은 폴더 준비</div>
+      <div class="stepDesc">전달받은 압축 파일(.zip)을 원하는 위치(예: 바탕화면)에 압축 해제합니다. 압축이 아니라 폴더째 전달받았다면 바로 다음 단계로 진행합니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">2</div>
+    <div class="stepBody">
+      <div class="stepTitle">VS Code에서 "폴더 열기"</div>
+      <div class="stepDesc">상단 메뉴 <span class="inlineCode">파일(File) → 폴더 열기(Open Folder...)</span> 클릭 → 압축 해제한 폴더를 선택하고 <b>폴더 선택</b>을 누릅니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">3</div>
+    <div class="stepBody">
+      <div class="stepTitle">탐색기에서 파일 목록 확인</div>
+      <div class="stepDesc">왼쪽 탐색기 패널에 <span class="inlineCode">standalone.html</span>을 포함한 폴더 내 파일 목록이 표시되면 정상적으로 불러온 것입니다.</div>
+    </div>
+  </div>
+  <div class="stepCard">
+    <div class="stepNum">4</div>
+    <div class="stepBody">
+      <div class="stepTitle">실제 대시보드 화면으로 열람</div>
+      <div class="stepDesc">VS Code에서 <span class="inlineCode">standalone.html</span>을 클릭하면 <b>코드(내용)</b>가 보입니다. 그래프·카드가 보이는 <b>실제 화면</b>을 확인하려면 해당 파일을 우클릭 → <span class="inlineCode">Reveal in File Explorer</span> 선택 후, 열린 파일 탐색기에서 더블클릭해 웹 브라우저로 엽니다.</div>
+    </div>
+  </div>
+
+  <!-- ── 6. 화면 구성 ── -->
+  <div class="sectionLabel" id="ui"><span class="sectionNum">6</span>VS Code 화면 구성 기초</div>
+  <div class="intro">실제 화면 배치를 도식화한 그림입니다. 아래 번호는 그림 속 아이콘 순서(①~⑥)와 1:1로 대응합니다.</div>
+
+  <div class="mockWrap">
+    <div class="mockTitleBar">
+      <div class="mockDot" style="background:#FF5F57"></div>
+      <div class="mockDot" style="background:#FEBC2E"></div>
+      <div class="mockDot" style="background:#28C840"></div>
+      <div class="mockTitleText">standalone.html — Visual Studio Code</div>
+    </div>
+    <div class="mockBody">
+      <div class="mockActivity">
+        <div class="mockIcon active">①</div>
+        <div class="mockIcon">②</div>
+        <div class="mockIcon">③</div>
+        <div class="mockIcon">④</div>
+        <div class="mockIcon">⑤</div>
+        <div class="mockIcon" style="background:#0114A7;margin-top:auto;margin-bottom:12px;">⑥</div>
+      </div>
+      <div class="mockSide">
+        <div class="mockSideTitle">탐색기 · 신용v0.2</div>
+        <div class="mockFile on">📄 standalone.html</div>
+        <div class="mockFile">📄 CSV_데이터_가이드.md</div>
+        <div class="mockFile">📄 template_2_simbase.csv</div>
+        <div class="mockFile">📁 real data_260619</div>
+        <div class="mockFile">📄 기본설치법.html</div>
+      </div>
+      <div class="mockEditor">
+        <div class="mockTabs">
+          <div class="mockTab on">standalone.html</div>
+          <div class="mockTab">가이드.md</div>
+        </div>
+        <div class="mockCodeArea">
+          <div class="codeLine" style="width:40%"></div>
+          <div class="codeLine" style="width:75%"></div>
+          <div class="codeLine" style="width:58%"></div>
+          <div class="codeLine" style="width:82%"></div>
+          <div class="codeLine" style="width:30%"></div>
+          <div class="codeLine" style="width:65%"></div>
+        </div>
+      </div>
+      <div class="mockClaude">
+        <div class="mockClaudeHead">💬 Claude Code</div>
+        <div class="bubble user">금리 카드 색상을 바꿔줘</div>
+        <div class="bubble bot">네, S.cardValue 색상을 수정하겠습니다…</div>
+      </div>
+    </div>
+    <div class="mockPanel">
+      &gt; 터미널 (하단 패널)<br/>
+      $ 여기서 명령어를 입력하거나 결과를 확인합니다_
+    </div>
+    <div class="mockStatus">
+      <span>⎇ master</span><span>UTF-8</span><span>줄 42</span><span style="margin-left:auto">Ln 1, Col 1</span>
+    </div>
+  </div>
+
+  <div class="legendGrid">
+    <div class="legendItem"><span class="legendNum">①</span><div><b>탐색기(Explorer)</b><br/>현재 폴더의 모든 파일·하위 폴더 목록을 보여줍니다. 가장 자주 쓰는 메뉴입니다.</div></div>
+    <div class="legendItem"><span class="legendNum">②</span><div><b>검색(Search)</b><br/>폴더 전체에서 특정 단어·문구를 찾을 때 사용합니다.</div></div>
+    <div class="legendItem"><span class="legendNum">③</span><div><b>소스 제어(Source Control)</b><br/>Git으로 변경 이력을 관리할 때 사용합니다 (초기엔 사용 빈도 낮음).</div></div>
+    <div class="legendItem"><span class="legendNum">④</span><div><b>실행 및 디버그</b><br/>코드를 직접 실행/점검할 때 사용합니다 (일반 팀원은 거의 사용하지 않음).</div></div>
+    <div class="legendItem"><span class="legendNum">⑤</span><div><b>확장(Extensions)</b><br/>한글 언어팩, Claude Code 등 추가 기능을 설치하는 곳입니다.</div></div>
+    <div class="legendItem"><span class="legendNum">⑥</span><div><b>Claude Code</b><br/>Claude와 대화하며 파일을 열람/수정 요청하는 채팅 패널입니다.</div></div>
+  </div>
+  <div class="assumptionBox">
+    가운데 <b>편집 영역</b>은 현재 열린 파일 내용을 보여주고, 위쪽 <b>탭</b>으로 여러 파일을 동시에 열어둘 수 있습니다.
+    하단 <b>터미널 패널</b>은 명령어를 입력하는 공간이며, 맨 아래 <b>상태 표시줄</b>은 현재 파일 인코딩·줄 번호 등 정보를 보여줍니다.
+  </div>
+
+  <!-- ── 체크리스트 ── -->
+  <div class="sectionLabel"><span class="sectionNum">✓</span>준비 체크리스트</div>
+  <div class="checklist">
+    <h3>시작 전 아래 4가지를 미리 확인해 주세요</h3>
+    <ul>
+      <li><span class="checkDot"></span>VS Code 설치 완료 (실행 시 화면이 정상적으로 뜨는지)</li>
+      <li><span class="checkDot"></span>한글 언어팩 적용 완료 (메뉴가 한글로 표시되는지)</li>
+      <li><span class="checkDot"></span>Claude Code 확장 설치 및 로그인 완료</li>
+      <li><span class="checkDot"></span>배포받은 산출물 폴더(<span class="inlineCode">신용v0.2</span> 등)를 VS Code에서 열어본 적 있는지</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <div>사전 준비 자료 v1.0 · Corporate여신팀</div>
+  </div>
+
+</div>
+</body>
+</html>
