@@ -124,12 +124,14 @@
     const EVENTS = [
       { id: "ev331", label: "3/31 본부조정금리변경",       refWeek: "4월 1주", refMonth: "4월", beforeMonths: ["1월","2월","3월"], afterMonths: ["4월"] },
       { id: "ev423", label: "4/23 본부조정금리변경",       refWeek: "5월 1주", refMonth: "5월", beforeMonths: ["3월","4월"],       afterMonths: ["5월"] },
-      { id: "ev529", label: "5/29 토스 우대금리 도입", refWeek: "6월 1주", refMonth: "6월", beforeMonths: ["4월","5월"],       afterMonths: ["6월"] },
+      { id: "ev529", label: "5/29 토스 우대금리 도입",     refWeek: "6월 1주", refMonth: "6월", beforeMonths: ["4월","5월"],       afterMonths: ["6월"] },
+      { id: "ev710", label: "7/10 등급별 금리 인상",       refWeek: "7월 3주", refMonth: "7월", beforeMonths: ["5월","6월"],       afterMonths: ["7월"] },
     ];
     const BP_CHANGES = {
       ev331: [{ label: "1~4등급", bp: -6 }],
       ev423: [{ label: "1등급", bp: -5 }, { label: "2등급", bp: -8 }, { label: "3등급", bp: -44 }, { label: "4등급", bp: -39 }],
       ev529: [{ label: "토스 플랫폼 유입고객 전 등급", bp: -10 }],
+      ev710: [{ label: "1등급", bp: 35 }, { label: "2등급", bp: 50 }, { label: "3등급", bp: 80 }, { label: "4~7등급", bp: 100 }],
     };
 
     // ── 주간 영업 지표 (이벤트별) ──
@@ -159,6 +161,15 @@
         { week: "6월 1주", newLoan: 131, netLoan: 77, balance: 2038, count: 191, newCust: 158, phase: "after"  },
         { week: "6월 2주", newLoan: 138, netLoan: 82, balance: 2120, count: 201, newCust: 167, phase: "after"  },
         { week: "6월 3주", newLoan: 145, netLoan: 87, balance: 2207, count: 211, newCust: 175, phase: "after"  },
+      ],
+      ev710: [
+        { week: "6월 1주", newLoan: 131, netLoan: 77, balance: 2038, count: 191, newCust: 158, phase: "before" },
+        { week: "6월 2주", newLoan: 138, netLoan: 82, balance: 2120, count: 201, newCust: 167, phase: "before" },
+        { week: "6월 3주", newLoan: 145, netLoan: 87, balance: 2207, count: 211, newCust: 175, phase: "before" },
+        { week: "6월 4주", newLoan: 130, netLoan: 72, balance: 2279, count: 185, newCust: 153, phase: "before" },
+        { week: "7월 1주", newLoan: 128, netLoan: 70, balance: 2349, count: 183, newCust: 151, phase: "before" },
+        { week: "7월 2주", newLoan: 125, netLoan: 68, balance: 2417, count: 179, newCust: 148, phase: "before" },
+        { week: "7월 3주", newLoan: 108, netLoan: 52, balance: 2469, count: 158, newCust: 130, phase: "after"  },
       ],
     };
 
@@ -224,6 +235,15 @@
         { grade: "5등급", platformInflow: [29.5, 32.1], preApprovalExec: [47.1, 49.8] },
         { grade: "6등급", platformInflow: [23.2, 25.4], preApprovalExec: [39.4, 41.1] },
         { grade: "7등급", platformInflow: [17.8, 19.2], preApprovalExec: [31.4, 33.0] },
+      ],
+      ev710: [
+        { grade: "1등급", platformInflow: [62.3, 55.8], preApprovalExec: [77.5, 71.2] },
+        { grade: "2등급", platformInflow: [57.8, 51.4], preApprovalExec: [74.2, 67.9] },
+        { grade: "3등급", platformInflow: [51.6, 44.8], preApprovalExec: [70.0, 62.5] },
+        { grade: "4등급", platformInflow: [43.2, 35.6], preApprovalExec: [62.5, 54.1] },
+        { grade: "5등급", platformInflow: [32.1, 26.4], preApprovalExec: [49.8, 42.3] },
+        { grade: "6등급", platformInflow: [25.4, 20.1], preApprovalExec: [41.1, 34.8] },
+        { grade: "7등급", platformInflow: [19.2, 15.3], preApprovalExec: [33.0, 27.6] },
       ],
     };
 
@@ -923,13 +943,13 @@
       const [adj, setAdj]                 = useState(() => DEMO_SIM_BASE.reduce((o, s) => ({ ...o, [s.grade]: 0 }), {}));
 
       const [weeklyByEvent,     setWeeklyByEvent]     = useState(DEMO_WEEKLY);
-      const [weeklyFileByEvent, setWeeklyFileByEvent] = useState({ ev331: "데모 데이터", ev423: "데모 데이터", ev529: "데모 데이터" });
+      const [weeklyFileByEvent, setWeeklyFileByEvent] = useState({ ev331: "데모 데이터", ev423: "데모 데이터", ev529: "데모 데이터", ev710: "데모 데이터" });
       const [monthlyHigh,       setMonthlyHigh]       = useState(DEMO_MONTHLY_HIGH);
       const [monthlyLow,        setMonthlyLow]        = useState(DEMO_MONTHLY_LOW);
       const [monthlyHighFile,   setMonthlyHighFile]   = useState("데모 데이터");
       const [monthlyLowFile,    setMonthlyLowFile]    = useState("데모 데이터");
       const [funnelByEvent,     setFunnelByEvent]     = useState(DEMO_FUNNEL);
-      const [funnelFileByEvent, setFunnelFileByEvent] = useState({ ev331: "데모 데이터", ev423: "데모 데이터", ev529: "데모 데이터" });
+      const [funnelFileByEvent, setFunnelFileByEvent] = useState({ ev331: "데모 데이터", ev423: "데모 데이터", ev529: "데모 데이터", ev710: "데모 데이터" });
 
       const sim = useMemo(
         () => runSimulation(adj, simBase, cof, { cardRate, depositRate, mauRate }),
